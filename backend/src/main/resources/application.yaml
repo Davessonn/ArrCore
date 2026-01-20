@@ -1,3 +1,13 @@
 spring:
   application:
     name: ArrCore
+    datasource:
+      SONARR_URL: ${SONARR_URL}
+      SONARR_API_KEY: ${SONARR_API_KEY}
+  config:
+    import: optional:file:.env[.properties]
+  docker:
+    compose:
+        enabled: false
+
+
