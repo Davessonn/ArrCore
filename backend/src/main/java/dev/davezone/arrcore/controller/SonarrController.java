@@ -27,4 +27,9 @@ public class SonarrController {
     public void deleteSeries(Long id) {
         sonarrService.deleteSeries(id);
     }
+
+    @GetMapping("/series/{id}")
+    public Flux<SonarrSeriesDto> getSeriesById(Long id) {
+        return sonarrService.getSeriesById(id);
+    }
 }

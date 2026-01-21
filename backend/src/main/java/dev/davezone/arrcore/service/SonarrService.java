@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 public class SonarrService {
@@ -12,6 +13,7 @@ public class SonarrService {
 
     private static final String ALL_SERIES_API_PATH = "/api/v3/series";
     private static final String DELETE_SERIES_API_PATH = "/api/v3/series/{id}";
+    private static final String GET_SERIES_BY_ID_API_PATH = "/api/v3/series/{id}";
 
     @Value("${SONARR_API_KEY}")
     private String apiKey;
@@ -40,6 +42,13 @@ public class SonarrService {
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
+    }
 
+    public Flux<SonarrSeriesDto> getSeriesById(Long id) {
+        return webClient.get()
+                .uri(sonarrUrl + GET_SERIES_BY_ID_API_PATH, id)
+                .header("X-Api-Key", apiKey)
+                .retrieve()
+                .bodyToFlux(SonarrSeriesDto.class);
     }
 }
