@@ -1,6 +1,7 @@
 package dev.davezone.arrcore.service;
 
 import dev.davezone.arrcore.dto.SonarrSeriesDto;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -11,20 +12,26 @@ import reactor.core.publisher.Mono;
 public class SonarrService {
 
 
-    private static final String ALL_SERIES_API_PATH = "/api/v3/series";
-    private static final String DELETE_SERIES_API_PATH = "/api/v3/series/{id}";
-    private static final String GET_SERIES_BY_ID_API_PATH = "/api/v3/series/{id}";
+    private static final String ALL_SERIES_API_PATH = "api/v3/series";
+    private static final String DELETE_SERIES_API_PATH = "api/v3/series/{id}";
+    private static final String GET_SERIES_BY_ID_API_PATH = "api/v3/series/{id}";
 
-    @Value("${SONARR_API_KEY}")
     private String apiKey;
 
-    @Value("${SONARR_URL}")
     private String sonarrUrl;
 
     private final WebClient webClient;
 
     public SonarrService(WebClient webClient) {
+        Dotenv dotenv = Dotenv.load();
+
+        this.apiKey = dotenv.get("SONARR_API_KEY");
+        this.sonarrUrl = dotenv.get("SONARR_URL");
         this.webClient = webClient;
+
+        if (this.apiKey == null || this.sonarrUrl == null) {
+            throw new IllegalStateException("Missing required environment variables: SONARR_API_KEY and SONARR_URL must be set.");
+        }
     }
 
     public Flux<SonarrSeriesDto> getAllSeries() {
