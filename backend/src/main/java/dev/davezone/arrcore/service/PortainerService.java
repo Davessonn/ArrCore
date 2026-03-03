@@ -3,18 +3,20 @@ package dev.davezone.arrcore.service;
 import dev.davezone.arrcore.auth.AuthRequest;
 import dev.davezone.arrcore.auth.AuthResponse;
 import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Service
 public class PortainerService {
 
     private static final String GET_JWT_API_PATH = "api/auth";
-    private static final String GET_CONTAINERS_API_PATH = "api/endpoints/1/docker/containers/json";
+    private static final String GET_CONTAINERS_API_PATH = "api/endpoints/3/docker/containers/json";
 
-    private String portainerUrl;
-    private String portainerUsername;
-    private String portainerPassword;
+    private final String portainerUrl;
+    private final String portainerUsername;
+    private final String portainerPassword;
 
     private final WebClient webClient;
 
@@ -30,7 +32,7 @@ public class PortainerService {
 
     public Flux<ContainerResponse> getContainers() {
         return authenticate()
-                .flatMapMany(token -> fetchContainers(token));
+                .flatMapMany(this::fetchContainers);
     }
 
     private Mono<String> authenticate() {
@@ -44,10 +46,7 @@ public class PortainerService {
 
     private Flux<ContainerResponse> fetchContainers(String token) {
         return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path(portainerUrl + GET_CONTAINERS_API_PATH)
-                        .queryParam("all", "true")
-                        .build())
+                .uri(portainerUrl + GET_CONTAINERS_API_PATH + "?all=true")
                 .header("Authorization", "Bearer " + token)
                 .retrieve()
                 .bodyToFlux(ContainerResponse.class);
