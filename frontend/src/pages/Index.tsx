@@ -1,7 +1,6 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ServiceStatus } from "@/components/dashboard/ServiceStatus";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
-import { DownloadQueue } from "@/components/dashboard/DownloadQueue";
 import { RecentMedia } from "@/components/dashboard/RecentMedia";
 import { UpcomingEpisodes } from "@/components/dashboard/UpcomingEpisodes";
 
@@ -27,8 +26,8 @@ const Index = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Left Column - Downloads & Recent */}
           <div className="xl:col-span-2 space-y-6">
-            <DownloadQueue />
-            <RecentMedia />
+            {/* <DownloadQueue /> */}
+            <RecentMedia /> 
           </div>
 
           {/* Right Column - Upcoming */}
