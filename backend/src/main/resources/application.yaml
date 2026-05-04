@@ -8,6 +8,6 @@ spring:
     import: optional:file:.env[.properties]
   docker:
     compose:
-        enabled: false
+      enabled: false
 
 

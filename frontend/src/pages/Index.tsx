@@ -1,43 +1,64 @@
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { ServiceStatus } from "@/components/dashboard/ServiceStatus";
-import { StatsOverview } from "@/components/dashboard/StatsOverview";
-import { DownloadQueue } from "@/components/dashboard/DownloadQueue";
-import { RecentMedia } from "@/components/dashboard/RecentMedia";
-import { UpcomingEpisodes } from "@/components/dashboard/UpcomingEpisodes";
+import { Link } from "react-router-dom";
+
+const modules = [
+  {
+    name: "Portainer",
+    path: "/portainer",
+    description: "Docker kontenerek, stackek es allapotok attekintese.",
+  },
+  {
+    name: "Sonarr",
+    path: "/sonarr",
+    description: "Sonarr modul helye. A tovabbi integracio ide kerulhet.",
+  },
+];
 
 const Index = () => {
   return (
-    <DashboardLayout>
-      <div className="p-6 space-y-6">
-        {/* Page Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Overview of your media server
-          </p>
-        </div>
-
-        {/* Service Status */}
-        <ServiceStatus />
-
-        {/* Stats Overview */}
-        <StatsOverview />
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Left Column - Downloads & Recent */}
-          <div className="xl:col-span-2 space-y-6">
-            <DownloadQueue />
-            <RecentMedia />
-          </div>
-
-          {/* Right Column - Upcoming */}
-          <div className="xl:col-span-1">
-            <UpcomingEpisodes />
-          </div>
-        </div>
+    <div
+      style={{
+        maxWidth: 1200,
+        margin: "0 auto",
+        padding: "2rem 1.5rem",
+        color: "#e2e8f0",
+      }}
+    >
+      <div style={{ marginBottom: "1.5rem" }}>
+        <h1 style={{ fontSize: "2rem", fontWeight: 700, margin: 0 }}>ArrCore</h1>
+        <p style={{ color: "#94a3b8", marginTop: "0.5rem" }}>
+          Valassz egy modult az admin feluleten.
+        </p>
       </div>
-    </DashboardLayout>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          gap: "1rem",
+        }}
+      >
+        {modules.map((module) => (
+          <Link
+            key={module.path}
+            to={module.path}
+            style={{
+              display: "block",
+              textDecoration: "none",
+              background: "#1e293b",
+              border: "1px solid #334155",
+              borderRadius: "12px",
+              padding: "1.25rem",
+              color: "#e2e8f0",
+            }}
+          >
+            <div style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+              {module.name}
+            </div>
+            <div style={{ color: "#94a3b8", lineHeight: 1.5 }}>{module.description}</div>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 };
 
