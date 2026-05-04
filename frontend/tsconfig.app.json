@@ -29,5 +29,5 @@
     "noUncheckedSideEffectImports": true,
     "resolveJsonModule": true
   },
-  "include": ["src", "portainer.json"]
+  "include": ["src"]
 }
