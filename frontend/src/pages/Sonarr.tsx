@@ -317,6 +317,7 @@ function SeriesModal({
 const Sonarr = () => {
   const [series, setSeries] = useState<Series[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "continuing" | "ended">(
     "all"
@@ -331,14 +332,28 @@ const Sonarr = () => {
   const [editForm, setEditForm] = useState({ title: "", path: "", overview: "" });
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
+  const loadSeries = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/sonarr/series");
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data: Series[] = await response.json();
+      setSeries(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load series");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetch("/sonarr.json")
-      .then((res) => res.json())
-      .then((data: Series[]) => {
-        setSeries(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    void loadSeries();
   }, []);
 
   const users = useMemo(() => {
@@ -414,22 +429,63 @@ const Sonarr = () => {
     [series]
   );
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this series?")) {
-      setSeries((prev) => prev.filter((s) => s.id !== id));
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this series?")) {
+      return;
+    }
+
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/sonarr/series/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
       setSelectedIds((prev) => {
         const next = new Set(prev);
         next.delete(id);
         return next;
       });
+      setSelectedSeries((prev) => (prev?.id === id ? null : prev));
+      await loadSeries();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete series");
     }
   };
 
-  const handleBatchDelete = () => {
+  const handleBatchDelete = async () => {
     if (selectedIds.size === 0) return;
-    if (window.confirm(`Delete ${selectedIds.size} selected series?`)) {
-      setSeries((prev) => prev.filter((s) => !selectedIds.has(s.id)));
+
+    if (!window.confirm(`Delete ${selectedIds.size} selected series?`)) {
+      return;
+    }
+
+    setError(null);
+
+    try {
+      const ids = Array.from(selectedIds);
+      const results = await Promise.all(
+        ids.map(async (id) => {
+          const response = await fetch(`/api/sonarr/series/${id}`, {
+            method: "DELETE",
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+        })
+      );
+
+      void results;
       setSelectedIds(new Set());
+      setSelectedSeries((prev) => (prev && selectedIds.has(prev.id) ? null : prev));
+      await loadSeries();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete series");
     }
   };
 
@@ -460,15 +516,27 @@ const Sonarr = () => {
 
   const cancelEdit = () => setEditingId(null);
 
-  const saveEdit = (id: number) => {
-    setSeries((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? { ...s, title: editForm.title, path: editForm.path, overview: editForm.overview }
-          : s
-      )
-    );
-    setEditingId(null);
+  const saveEdit = async (id: number) => {
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/sonarr/series/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editForm),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      setEditingId(null);
+      await loadSeries();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update series");
+    }
   };
 
   const toggleSort = (key: SortKey) => {
@@ -490,6 +558,8 @@ const Sonarr = () => {
 
   return (
     <div className="sonarr-page">
+      {error && <div className="error-banner">Failed to load Sonarr data: {error}</div>}
+
       <header className="sonarr-header">
         <div>
           <h1 className="sonarr-title">

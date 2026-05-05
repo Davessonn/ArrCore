@@ -1,5 +1,6 @@
 .sonarr-page { max-width: 1800px; margin: 0 auto; padding: 2rem 1.5rem; font-family: system-ui, -apple-system, sans-serif; color: #e2e8f0; }
 .sonarr-loading { text-align: center; padding: 4rem; color: #64748b; }
+.error-banner { margin-bottom: 1rem; padding: 0.85rem 1rem; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 0.75rem; background: rgba(127, 29, 29, 0.2); color: #fca5a5; }
 
 .sonarr-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
 .sonarr-title { display: flex; align-items: center; gap: 0.6rem; font-size: 1.75rem; font-weight: 700; color: #f1f5f9; margin: 0; }
