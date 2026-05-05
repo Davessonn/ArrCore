@@ -27,9 +27,9 @@ public class SonarrSeriesDto {
     @JsonProperty("images")
     private List<ImageDTO> images;
     @JsonProperty("statistics")
-    private StatisticsDTO statistics;
+    private SonarrStatisticsDTO statistics;
     @JsonProperty("ratings")
-    private RatingsDTO ratings;
+    private SonarrRatingsDTO ratings;
     @JsonProperty("tags")
     private List<Integer> tags;
     @JsonProperty("runtime")
@@ -39,7 +39,7 @@ public class SonarrSeriesDto {
     @JsonProperty("previousAiring")
     private Instant lastEpisodeDate;
     @JsonProperty("seasons")
-    private List<SeasonDTO> seasons;
+    private List<SonarrSeasonDTO> seasons;
     @JsonProperty("year")
     private int year;
     @JsonProperty("imdbId")
