@@ -24,7 +24,8 @@ import "./Radarr.css";
 
 interface RadarrImage {
 	coverType: string;
-	remoteUrl: string;
+	remoteUrl?: string;
+	url?: string;
 }
 
 interface MovieRating {
@@ -56,6 +57,7 @@ interface RadarrMovie {
 }
 
 interface RadarrCollection {
+	id?: number;
 	title: string;
 	sortTitle: string;
 	tmdbId: number;
@@ -68,6 +70,22 @@ interface RadarrCollection {
 	minimumAvailability: string;
 	movies: RadarrMovie[];
 	tags: number[];
+}
+
+interface RadarrApiItem extends Omit<RadarrCollection, "movies" | "images" | "tags"> {
+	id?: number;
+	images?: RadarrImage[];
+	tags?: number[];
+	movies: RadarrMovie[] | null;
+	status?: string;
+	runtime?: number;
+	year?: number;
+	ratings?: MovieRatings;
+	genres?: string[];
+	imdbId?: string;
+	folder?: string;
+	isExisting?: boolean;
+	isExcluded?: boolean;
 }
 
 type SortKey = "title" | "movies" | "rating" | "year";
@@ -87,10 +105,14 @@ const getUser = (rootFolderPath: string) => {
 };
 
 const getPoster = (images: RadarrImage[]) =>
-	images.find((i) => i.coverType === "poster")?.remoteUrl ?? "";
+	images.find((i) => i.coverType === "poster")?.remoteUrl ??
+	images.find((i) => i.coverType === "poster")?.url ??
+	"";
 
 const getFanart = (images: RadarrImage[]) =>
-	images.find((i) => i.coverType === "fanart")?.remoteUrl ?? "";
+	images.find((i) => i.coverType === "fanart")?.remoteUrl ??
+	images.find((i) => i.coverType === "fanart")?.url ??
+	"";
 
 const getTagNames = (tags: number[]) =>
 	tags.map((t) => TAG_MAP[t] ?? `tag-${t}`);
@@ -112,6 +134,44 @@ const formatRuntime = (minutes: number) => {
 	const h = Math.floor(minutes / 60);
 	const m = minutes % 60;
 	return `${h}h ${m}m`;
+};
+
+const normalizeMovie = (item: Partial<RadarrApiItem>): RadarrMovie => ({
+	tmdbId: item.tmdbId ?? 0,
+	imdbId: item.imdbId,
+	title: item.title ?? "Unknown title",
+	status: item.status ?? (item.isExisting === false ? "Missing" : "Available"),
+	overview: item.overview ?? "",
+	runtime: item.runtime ?? 0,
+	year: item.year ?? 0,
+	ratings: item.ratings ?? {},
+	genres: item.genres ?? [],
+	images: item.images ?? [],
+	folder: item.folder,
+	isExisting: item.isExisting,
+	isExcluded: item.isExcluded,
+});
+
+const normalizeCollection = (item: RadarrApiItem): RadarrCollection => {
+	const movies = Array.isArray(item.movies) && item.movies.length
+		? item.movies.map((movie) => normalizeMovie(movie))
+		: [normalizeMovie(item)];
+
+	return {
+		id: item.id,
+		title: item.title ?? "Unknown title",
+		sortTitle: item.sortTitle ?? item.title ?? "",
+		tmdbId: item.tmdbId,
+		images: item.images ?? [],
+		overview: item.overview ?? "",
+		monitored: Boolean(item.monitored),
+		rootFolderPath: item.rootFolderPath ?? "",
+		qualityProfileId: item.qualityProfileId ?? 0,
+		searchOnAdd: Boolean(item.searchOnAdd),
+		minimumAvailability: item.minimumAvailability ?? "unknown",
+		movies,
+		tags: item.tags ?? [],
+	};
 };
 
 function StatCard({
@@ -258,10 +318,10 @@ const Radarr = () => {
 	const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
 	useEffect(() => {
-		fetch("/radarr.json")
+		fetch("/api/radarr/movies")
 			.then((res) => res.json())
-			.then((data: RadarrCollection[]) => {
-				setCollections(data);
+			.then((data: RadarrApiItem[]) => {
+				setCollections(Array.isArray(data) ? data.map(normalizeCollection) : []);
 				setLoading(false);
 			})
 			.catch(() => setLoading(false));
