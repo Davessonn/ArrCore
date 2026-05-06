@@ -11,6 +11,11 @@ const modules = [
     path: "/sonarr",
     description: "Sonarr modul helye. A tovabbi integracio ide kerulhet.",
   },
+  {
+    name: "qBittorrent",
+    path: "/qbittorrent",
+    description: "Torrentek kezelese, sebesseg es allapot figyelese.",
+  },
 ];
 
 const Index = () => {

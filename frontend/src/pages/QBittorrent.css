@@ -1,0 +1,344 @@
+.qbit-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  color: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.qbit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.qbit-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.qbit-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.qbit-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.qbit-stat-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.qbit-stat-card .label {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.qbit-stat-card .value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.qbit-stat-card .sub {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.qbit-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.qbit-search {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.qbit-search:focus {
+  border-color: #3b82f6;
+}
+
+.qbit-filter-btn {
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.qbit-filter-btn:hover {
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.qbit-filter-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+.qbit-table-wrapper {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.qbit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.qbit-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #334155;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.qbit-table th:hover {
+  color: #e2e8f0;
+}
+
+.qbit-table td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #1e293b;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.qbit-table tr:hover td {
+  background: #263348;
+}
+
+.qbit-table tr:last-child td {
+  border-bottom: none;
+}
+
+.qbit-name {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.qbit-progress-cell {
+  min-width: 120px;
+}
+
+.qbit-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #334155;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 2px;
+}
+
+.qbit-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.qbit-progress-text {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.qbit-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.qbit-state.downloading {
+  background: #1e3a5f;
+  color: #60a5fa;
+}
+
+.qbit-state.uploading {
+  background: #14532d;
+  color: #4ade80;
+}
+
+.qbit-state.paused {
+  background: #44403c;
+  color: #a8a29e;
+}
+
+.qbit-state.stalled {
+  background: #422006;
+  color: #fb923c;
+}
+
+.qbit-state.completed {
+  background: #14532d;
+  color: #4ade80;
+}
+
+.qbit-state.error {
+  background: #450a0a;
+  color: #f87171;
+}
+
+.qbit-category {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  background: #312e81;
+  color: #a5b4fc;
+}
+
+.qbit-speed {
+  color: #60a5fa;
+  font-weight: 500;
+}
+
+.qbit-speed.up {
+  color: #4ade80;
+}
+
+.qbit-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 4px;
+  color: #94a3b8;
+  transition: all 0.15s;
+}
+
+.qbit-action-btn:hover {
+  color: #e2e8f0;
+  background: #334155;
+}
+
+.qbit-action-btn.delete:hover {
+  color: #f87171;
+  background: #450a0a;
+}
+
+.qbit-actions-cell {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.qbit-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+}
+
+.qbit-detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.qbit-detail-modal {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 1.75rem;
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  color: #e2e8f0;
+}
+
+.qbit-detail-modal h2 {
+  margin: 0 0 1rem;
+  font-size: 1.2rem;
+  word-break: break-word;
+}
+
+.qbit-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.qbit-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.qbit-detail-item .label {
+  color: #64748b;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.qbit-detail-item .value {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.qbit-detail-close {
+  margin-top: 1.25rem;
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #e2e8f0;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.qbit-detail-close:hover {
+  background: #1e293b;
+  border-color: #475569;
+}
