@@ -5,6 +5,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 public class RadarrService {
@@ -38,5 +39,13 @@ public class RadarrService {
                 .header("X-Api-Key", apiKey)
                 .retrieve()
                 .bodyToFlux(RadarrDTO.class);
+    }
+
+    public Mono<Void> deleteMovie(Long id) {
+        return webClient.delete()
+                .uri(radarrUrl + DELETE_MOVIE_API_PATH, id)
+                .header("X-Api-Key", apiKey)
+                .retrieve()
+                .bodyToMono(Void.class);
     }
 }
