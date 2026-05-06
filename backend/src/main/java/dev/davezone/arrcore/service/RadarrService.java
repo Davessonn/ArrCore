@@ -10,8 +10,8 @@ import reactor.core.publisher.Mono;
 @Service
 public class RadarrService {
 
-    private static final String ALL_MOVIES_API_PATH = "api/v3/collection";
-    private static final String DELETE_MOVIE_API_PATH = "api/v3/collection/{id}";
+    private static final String ALL_MOVIES_API_PATH = "api/v3/movie";
+    private static final String DELETE_MOVIE_API_PATH = "api/v3/movie/{id}";
     private static final String GET_MOVIE_BY_ID_API_PATH = "api/v3/collection/{id}";
     private static final String UPDATE_MOVIE_API_PATH = "api/v3/collection/{id}";
 
