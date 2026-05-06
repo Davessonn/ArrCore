@@ -108,6 +108,48 @@
   color: #fff;
 }
 
+.qbit-primary-btn,
+.qbit-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.95rem;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.qbit-primary-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #fff;
+}
+
+.qbit-primary-btn:hover:not(:disabled) {
+  background: #263348;
+  border-color: #475569;
+}
+
+.qbit-secondary-btn {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.qbit-secondary-btn:hover:not(:disabled) {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.qbit-primary-btn:disabled,
+.qbit-secondary-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .qbit-table-wrapper {
   background: #1e293b;
   border: 1px solid #334155;
@@ -159,6 +201,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 500;
+}
+
+.qbit-path {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #cbd5e1;
 }
 
 .qbit-progress-cell {
@@ -297,6 +346,151 @@
   color: #e2e8f0;
 }
 
+.qbit-add-modal {
+  position: relative;
+  background: linear-gradient(180deg, #223148 0%, #1e293b 100%);
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 1.5rem;
+  max-width: 760px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  color: #e2e8f0;
+  box-shadow: 0 24px 80px rgba(2, 6, 23, 0.45);
+}
+
+.qbit-add-modal h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.qbit-modal-subtitle {
+  margin: 0.4rem 0 1.25rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.qbit-modal-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.qbit-modal-close:hover:not(:disabled) {
+  color: #f1f5f9;
+  border-color: #475569;
+}
+
+.qbit-add-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.qbit-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.qbit-form-field--full {
+  grid-column: 1 / -1;
+}
+
+.qbit-form-field span {
+  color: #94a3b8;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.qbit-form-field input,
+.qbit-form-field select,
+.qbit-form-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.qbit-form-field select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #94a3b8 50%), linear-gradient(135deg, #94a3b8 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 2.4rem;
+  cursor: pointer;
+}
+
+.qbit-form-field textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.qbit-form-field input:focus,
+.qbit-form-field select:focus,
+.qbit-form-field textarea:focus {
+  border-color: #3b82f6;
+}
+
+.qbit-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.qbit-checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+}
+
+.qbit-checkbox-field input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.qbit-form-error {
+  grid-column: 1 / -1;
+  padding: 0.8rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #7f1d1d;
+  background: #450a0a;
+  color: #fca5a5;
+  font-size: 0.85rem;
+}
+
+.qbit-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
 .qbit-detail-modal h2 {
   margin: 0 0 1rem;
   font-size: 1.2rem;
@@ -341,4 +535,21 @@
 .qbit-detail-close:hover {
   background: #1e293b;
   border-color: #475569;
+}
+
+@media (max-width: 720px) {
+  .qbit-add-form,
+  .qbit-checkbox-grid,
+  .qbit-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qbit-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .qbit-primary-btn,
+  .qbit-secondary-btn {
+    width: 100%;
+  }
 }
