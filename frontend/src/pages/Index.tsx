@@ -7,6 +7,11 @@ const modules = [
     description: "Docker kontenerek, stackek es allapotok attekintese.",
   },
   {
+    name: "Radarr",
+    path: "/radarr",
+    description: "Radarr gyujtemenyek es filmek attekintese.",
+  },
+  {
     name: "Sonarr",
     path: "/sonarr",
     description: "Sonarr modul helye. A tovabbi integracio ide kerulhet.",
