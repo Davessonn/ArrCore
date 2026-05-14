@@ -3,6 +3,7 @@ import Index from './pages/Index'
 import Portainer from './pages/Portainer'
 import Sonarr from './pages/Sonarr'
 import QBittorrent from './pages/QBittorrent'
+import Seerr from './pages/Seerr'
 import './App.css'
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
         <Route path="/portainer" element={<Portainer />} />
         <Route path="/sonarr" element={<Sonarr />} />
         <Route path="/qbittorrent" element={<QBittorrent />} />
+        <Route path="/seerr" element={<Seerr />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
   )

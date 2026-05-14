@@ -16,6 +16,11 @@ const modules = [
     path: "/qbittorrent",
     description: "Torrentek kezelese, sebesseg es allapot figyelese.",
   },
+  {
+    name: "Seerr",
+    path: "/seerr",
+    description: "Filmek es sorozatok keresese, requestek kezelese felhasznalonkent.",
+  },
 ];
 
 const Index = () => {
