@@ -38,7 +38,9 @@
 
 .qbit-stat-card {
   background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--card-radius);
   padding: 1.25rem;
   display: flex;
@@ -48,7 +50,7 @@
 }
 
 .qbit-stat-card:hover {
-  border-color: var(--color-border-hover);
+  border-color: var(--glass-border-hover);
   box-shadow: var(--shadow-sm);
 }
 
@@ -85,7 +87,7 @@
   min-width: 200px;
   padding: 0.6rem 0.85rem;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
   background: var(--color-bg-input);
   color: var(--color-text-primary);
   font-size: 0.875rem;
@@ -105,8 +107,10 @@
 .qbit-filter-btn {
   padding: 0.5rem 0.9rem;
   border-radius: var(--radius-full);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
   background: var(--color-bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   color: var(--color-text-secondary);
   font-size: 0.8rem;
   font-weight: 500;
@@ -115,7 +119,7 @@
 }
 
 .qbit-filter-btn:hover {
-  border-color: var(--color-border-hover);
+  border-color: var(--glass-border-hover);
   color: var(--color-text-primary);
   background: var(--color-bg-elevated);
 }
@@ -134,7 +138,7 @@
   gap: 0.45rem;
   padding: 0.6rem 1rem;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 500;
@@ -155,12 +159,14 @@
 
 .qbit-secondary-btn {
   background: var(--color-bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   color: var(--color-text-secondary);
 }
 
 .qbit-secondary-btn:hover:not(:disabled) {
   background: var(--color-bg-elevated);
-  border-color: var(--color-border-hover);
+  border-color: var(--glass-border-hover);
   color: var(--color-text-primary);
 }
 
@@ -172,7 +178,9 @@
 
 .qbit-table-wrapper {
   background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--card-radius);
   overflow-x: auto;
 }
@@ -338,8 +346,10 @@
 }
 
 .qbit-detail-modal {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: rgba(16, 20, 35, 0.92);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border-hover);
   border-radius: var(--radius-xl);
   padding: 2rem;
   max-width: 600px;
@@ -353,8 +363,10 @@
 
 .qbit-add-modal {
   position: relative;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: rgba(16, 20, 35, 0.92);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border-hover);
   border-radius: var(--radius-xl);
   padding: 2rem;
   max-width: 760px;
@@ -390,7 +402,7 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-full);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
   background: var(--color-bg-secondary);
   color: var(--color-text-muted);
   cursor: pointer;
@@ -399,7 +411,7 @@
 
 .qbit-modal-close:hover:not(:disabled) {
   color: var(--color-text-primary);
-  border-color: var(--color-border-hover);
+  border-color: var(--glass-border-hover);
   background: var(--color-bg-elevated);
 }
 
@@ -434,7 +446,7 @@
   box-sizing: border-box;
   padding: 0.7rem 0.9rem;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
   background: var(--color-bg-input);
   color: var(--color-text-primary);
   font-size: 0.875rem;
@@ -477,7 +489,7 @@
   gap: 0.6rem;
   padding: 0.75rem 0.9rem;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
   background: var(--color-bg-input);
   color: var(--color-text-secondary);
   font-size: 0.85rem;
@@ -485,7 +497,7 @@
 }
 
 .qbit-checkbox-field:hover {
-  border-color: var(--color-border-hover);
+  border-color: var(--glass-border-hover);
 }
 
 .qbit-checkbox-field input {
@@ -550,7 +562,7 @@
   width: 100%;
   padding: 0.65rem;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
   cursor: pointer;
@@ -561,7 +573,7 @@
 
 .qbit-detail-close:hover {
   background: var(--color-bg-elevated);
-  border-color: var(--color-border-hover);
+  border-color: var(--glass-border-hover);
 }
 
 @media (max-width: 720px) {
@@ -580,3 +592,4 @@
     width: 100%;
   }
 }
+

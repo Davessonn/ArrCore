@@ -55,7 +55,9 @@
   gap: 0.25rem;
   margin-bottom: 2rem;
   background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 0.25rem;
   width: fit-content;
@@ -95,14 +97,16 @@
   align-items: center;
   gap: 1rem;
   background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--card-radius);
   padding: 1.25rem;
   transition: all var(--transition-base);
 }
 
 .seerr-stat-card:hover {
-  border-color: var(--color-border-hover);
+  border-color: var(--glass-border-hover);
   box-shadow: var(--shadow-sm);
 }
 
@@ -147,7 +151,7 @@
 .seerr-search-input {
   width: 100%;
   background: var(--color-bg-input);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 0.7rem 0.85rem 0.7rem 2.5rem;
   color: var(--color-text-primary);
@@ -195,7 +199,9 @@
 
 .seerr-result-card {
   background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--card-radius);
   overflow: hidden;
   transition: all var(--transition-base);
@@ -203,7 +209,7 @@
 }
 
 .seerr-result-card:hover {
-  border-color: var(--color-border-hover);
+  border-color: var(--glass-border-hover);
   box-shadow: var(--shadow-lg);
   transform: translateY(-3px);
 }
@@ -341,7 +347,9 @@
 
 .seerr-user-btn {
   background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-full);
   padding: 0.4rem 0.85rem;
   color: var(--color-text-secondary);
@@ -355,7 +363,7 @@
 }
 
 .seerr-user-btn:hover {
-  border-color: var(--color-border-hover);
+  border-color: var(--glass-border-hover);
   color: var(--color-text-primary);
 }
 
@@ -369,7 +377,9 @@
   width: 100%;
   border-collapse: collapse;
   background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--card-radius);
   overflow: hidden;
 }
@@ -452,8 +462,10 @@
 }
 
 .seerr-modal {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: rgba(16, 20, 35, 0.92);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border-hover);
   border-radius: var(--radius-xl);
   width: 100%;
   max-width: 500px;
@@ -549,7 +561,7 @@
 
 .seerr-modal-cancel-btn {
   background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 0.7rem 1.5rem;
   color: var(--color-text-secondary);
@@ -561,7 +573,9 @@
 
 .seerr-modal-cancel-btn:hover {
   background: var(--color-bg-card);
-  border-color: var(--color-border-hover);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-color: var(--glass-border-hover);
   color: var(--color-text-primary);
 }
 
@@ -598,3 +612,4 @@
   width: 15px;
   height: 15px;
 }
+

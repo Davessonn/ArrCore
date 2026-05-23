@@ -472,7 +472,7 @@ const Radarr = () => {
 			<header className="radarr-header">
 				<div>
 					<h1 className="radarr-title">
-						<Tv size={28} /> Radarr
+						<Film size={28} /> Radarr
 					</h1>
 					<p className="radarr-subtitle">
 						{filtered.length} of {collections.length} collections
