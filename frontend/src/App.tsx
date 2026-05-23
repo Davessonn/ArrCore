@@ -6,6 +6,7 @@ import Radarr from './pages/Radarr'
 import Sonarr from './pages/Sonarr'
 import QBittorrent from './pages/QBittorrent'
 import Seerr from './pages/Seerr'
+import Settings from './pages/Settings'
 import './App.css'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Route path="/radarr" element={<Radarr />} />
         <Route path="/qbittorrent" element={<QBittorrent />} />
         <Route path="/seerr" element={<Seerr />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

@@ -8,6 +8,7 @@ import {
   Tv,
   Download,
   Clapperboard,
+  Settings,
 } from "lucide-react";
 
 const navItems = [
@@ -16,6 +17,7 @@ const navItems = [
   { path: "/sonarr", icon: Tv, label: "Sonarr" },
   { path: "/qbittorrent", icon: Download, label: "qBittorrent" },
   { path: "/seerr", icon: Clapperboard, label: "Seerr" },
+  { path: "/settings", icon: Settings, label: "Settings" },
 ];
 
 export default function Layout() {
