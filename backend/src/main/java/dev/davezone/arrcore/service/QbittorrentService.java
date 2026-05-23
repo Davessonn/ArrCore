@@ -2,7 +2,6 @@ package dev.davezone.arrcore.service;
 
 import dev.davezone.arrcore.dto.AddTorrentRequest;
 import dev.davezone.arrcore.dto.TorrentDto;
-import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -20,32 +19,32 @@ import java.util.List;
 @Service
 public class QbittorrentService {
 
+    private static final String SERVICE_NAME = "qbittorrent";
     private static final String ALL_CATEGORY_API_PATH = "/api/v2/torrents/categories";
 
-    private final String qbittorentUrl;
-    private final String qbittorrentUsername;
-    private final String qbittorrentPassword;
     private String sessionCookie;
 
     private final WebClient webClient;
+    private final SettingsService settingsService;
 
-    public QbittorrentService(WebClient webClient) {
-        Dotenv dotenv = Dotenv.load();
-
-        this.qbittorentUrl = dotenv.get("QBITTORRENT_URL");
-        this.qbittorrentUsername = dotenv.get("QBITTORRENT_USERNAME");
-        this.qbittorrentPassword = dotenv.get("QBITTORRENT_PASSWORD");
+    public QbittorrentService(WebClient webClient, SettingsService settingsService) {
         this.webClient = webClient;
+        this.settingsService = settingsService;
     }
 
     public Mono<String> login() {
-        return webClient.post()
-                .uri(qbittorentUrl + "/api/v2/auth/login")
+        return Mono.zip(
+                settingsService.getDecryptedUrl(SERVICE_NAME),
+                settingsService.getDecryptedUsername(SERVICE_NAME),
+                settingsService.getDecryptedPassword(SERVICE_NAME)
+        ).flatMap(tuple -> webClient.post()
+                .uri(tuple.getT1() + "/api/v2/auth/login")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData("username", qbittorrentUsername)
-                        .with("password", qbittorrentPassword))
+                .body(BodyInserters.fromFormData("username", tuple.getT2())
+                        .with("password", tuple.getT3()))
                 .exchangeToMono(this::extractSessionCookie)
-                .doOnNext(cookie -> this.sessionCookie = cookie);
+                .doOnNext(cookie -> this.sessionCookie = cookie)
+        );
     }
 
     private Mono<String> extractSessionCookie(ClientResponse response) {
@@ -72,11 +71,15 @@ public class QbittorrentService {
 
     public Flux<TorrentDto> getAllTorrents() {
         return getSessionCookie()
-                .flatMapMany(cookie -> webClient.get()
-                        .uri(qbittorentUrl + "/api/v2/torrents/info")
-                        .header(HttpHeaders.COOKIE, cookie)
-                        .retrieve()
-                        .bodyToFlux(TorrentDto.class));
+                .flatMapMany(cookie ->
+                        settingsService.getDecryptedUrl(SERVICE_NAME).flatMapMany(url ->
+                                webClient.get()
+                                        .uri(url + "/api/v2/torrents/info")
+                                        .header(HttpHeaders.COOKIE, cookie)
+                                        .retrieve()
+                                        .bodyToFlux(TorrentDto.class)
+                        )
+                );
     }
 
     public Mono<String> addTorrent(AddTorrentRequest request) {
@@ -121,13 +124,17 @@ public class QbittorrentService {
 
     private Mono<String> postAddTorrent(MultiValueMap<String, Object> form) {
         return getSessionCookie()
-                .flatMap(cookie -> webClient.post()
-                        .uri(qbittorentUrl + "/api/v2/torrents/add")
-                        .header(HttpHeaders.COOKIE, cookie)
-                        .contentType(MediaType.MULTIPART_FORM_DATA)
-                        .body(BodyInserters.fromMultipartData(form))
-                        .retrieve()
-                        .bodyToMono(String.class));
+                .flatMap(cookie ->
+                        settingsService.getDecryptedUrl(SERVICE_NAME).flatMap(url ->
+                                webClient.post()
+                                        .uri(url + "/api/v2/torrents/add")
+                                        .header(HttpHeaders.COOKIE, cookie)
+                                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                                        .body(BodyInserters.fromMultipartData(form))
+                                        .retrieve()
+                                        .bodyToMono(String.class)
+                        )
+                );
     }
 
     private void addIfPresent(MultiValueMap<String, Object> form, String key, String value) {
@@ -150,10 +157,14 @@ public class QbittorrentService {
 
     public Flux<String> getAllCategories() {
         return getSessionCookie()
-                .flatMapMany(cookie -> webClient.get()
-                        .uri(qbittorentUrl + ALL_CATEGORY_API_PATH)
-                        .header(HttpHeaders.COOKIE, cookie)
-                        .retrieve()
-                        .bodyToFlux(String.class));
+                .flatMapMany(cookie ->
+                        settingsService.getDecryptedUrl(SERVICE_NAME).flatMapMany(url ->
+                                webClient.get()
+                                        .uri(url + ALL_CATEGORY_API_PATH)
+                                        .header(HttpHeaders.COOKIE, cookie)
+                                        .retrieve()
+                                        .bodyToFlux(String.class)
+                        )
+                );
     }
 }

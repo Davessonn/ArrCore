@@ -1,7 +1,6 @@
 package dev.davezone.arrcore.service;
 
 import dev.davezone.arrcore.dto.RadarrDTO;
-import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -10,42 +9,42 @@ import reactor.core.publisher.Mono;
 @Service
 public class RadarrService {
 
+    private static final String SERVICE_NAME = "radarr";
     private static final String ALL_MOVIES_API_PATH = "api/v3/movie";
     private static final String DELETE_MOVIE_API_PATH = "api/v3/movie/{id}";
-    private static final String GET_MOVIE_BY_ID_API_PATH = "api/v3/collection/{id}";
-    private static final String UPDATE_MOVIE_API_PATH = "api/v3/collection/{id}";
-
-    private String apiKey;
-
-    private String radarrUrl;
 
     private final WebClient webClient;
+    private final SettingsService settingsService;
 
-    public RadarrService(WebClient webClient) {
-        Dotenv dotenv = Dotenv.load();
-
-        this.apiKey = dotenv.get("RADARR_API_KEY");
-        this.radarrUrl = dotenv.get("RADARR_URL");
+    public RadarrService(WebClient webClient, SettingsService settingsService) {
         this.webClient = webClient;
+        this.settingsService = settingsService;
+    }
 
-        if (this.apiKey == null || this.radarrUrl == null) {
-            throw new IllegalStateException("Missing required environment variables: SONARR_API_KEY and SONARR_URL must be set.");
-        }
+    private Mono<String[]> getCredentials() {
+        return Mono.zip(
+                settingsService.getDecryptedUrl(SERVICE_NAME),
+                settingsService.getDecryptedApiKey(SERVICE_NAME)
+        ).map(tuple -> new String[]{tuple.getT1(), tuple.getT2()});
     }
 
     public Flux<RadarrDTO> getAllMovies() {
-        return webClient.get()
-                .uri(radarrUrl + ALL_MOVIES_API_PATH)
-                .header("X-Api-Key", apiKey)
-                .retrieve()
-                .bodyToFlux(RadarrDTO.class);
+        return getCredentials().flatMapMany(creds ->
+                webClient.get()
+                        .uri(creds[0] + ALL_MOVIES_API_PATH)
+                        .header("X-Api-Key", creds[1])
+                        .retrieve()
+                        .bodyToFlux(RadarrDTO.class)
+        );
     }
 
     public Mono<Void> deleteMovie(Long id) {
-        return webClient.delete()
-                .uri(radarrUrl + DELETE_MOVIE_API_PATH, id)
-                .header("X-Api-Key", apiKey)
-                .retrieve()
-                .bodyToMono(Void.class);
+        return getCredentials().flatMap(creds ->
+                webClient.delete()
+                        .uri(creds[0] + DELETE_MOVIE_API_PATH, id)
+                        .header("X-Api-Key", creds[1])
+                        .retrieve()
+                        .bodyToMono(Void.class)
+        );
     }
 }
