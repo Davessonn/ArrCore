@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import Index from './pages/Index'
 import Portainer from './pages/Portainer'
+import Radarr from './pages/Radarr'
 import Sonarr from './pages/Sonarr'
 import QBittorrent from './pages/QBittorrent'
 import Seerr from './pages/Seerr'
@@ -14,6 +15,7 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/portainer" element={<Portainer />} />
         <Route path="/sonarr" element={<Sonarr />} />
+        <Route path="/radarr" element={<Radarr />} />
         <Route path="/qbittorrent" element={<QBittorrent />} />
         <Route path="/seerr" element={<Seerr />} />
         <Route path="*" element={<Navigate to="/" replace />} />

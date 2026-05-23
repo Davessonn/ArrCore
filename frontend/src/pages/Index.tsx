@@ -17,6 +17,11 @@ const modules = [
     color: "#3b82f6",
   },
   {
+    name: "Radarr",
+    path: "/radarr",
+    description: "Radarr gyujtemenyek es filmek attekintese.",
+  },
+  {
     name: "Sonarr",
     path: "/sonarr",
     description: "Sorozatok kezelése, monitorozás és letöltés állapot.",

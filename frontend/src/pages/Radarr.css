@@ -1,0 +1,822 @@
+.radarr-page {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #e2e8f0;
+}
+
+.radarr-loading {
+  text-align: center;
+  padding: 4rem;
+  color: #64748b;
+}
+
+.radarr-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.radarr-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.radarr-subtitle {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin: 0.35rem 0 0;
+}
+
+.radarr-view-toggle {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.radarr-view-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.375rem;
+  padding: 0.45rem 0.6rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.radarr-view-btn:hover {
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.radarr-view-btn.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+
+.radarr-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 1100px) {
+  .radarr-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.radarr-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1rem 1.1rem;
+  transition: border-color 0.2s;
+}
+
+.radarr-stat-card:hover {
+  border-color: #475569;
+}
+
+.radarr-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+}
+
+.radarr-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.radarr-stat-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.2;
+}
+
+.radarr-stat-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.radarr-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.radarr-search-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+  max-width: 400px;
+}
+
+.radarr-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  pointer-events: none;
+}
+
+.radarr-search-input {
+  width: 100%;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem 0.6rem 2.25rem;
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.radarr-search-input::placeholder {
+  color: #64748b;
+}
+
+.radarr-search-input:focus {
+  border-color: #6366f1;
+}
+
+.radarr-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #64748b;
+  flex-wrap: wrap;
+}
+
+.radarr-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.radarr-filter-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.375rem;
+  padding: 0.4rem 0.85rem;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.radarr-filter-btn:hover {
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.radarr-filter-btn.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+
+.radarr-select {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.375rem;
+  padding: 0.4rem 0.65rem;
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.radarr-select:focus {
+  border-color: #6366f1;
+}
+
+.radarr-sort-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.radarr-sort-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.radarr-sort-btn {
+  background: transparent;
+  border: 1px solid #334155;
+  border-radius: 0.375rem;
+  padding: 0.3rem 0.7rem;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.radarr-sort-btn:hover {
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.radarr-sort-btn.active {
+  background: #334155;
+  border-color: #6366f1;
+  color: #e2e8f0;
+}
+
+.radarr-batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #312e81;
+  border: 1px solid #4338ca;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: #c7d2fe;
+}
+
+.radarr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.radarr-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.radarr-card:hover {
+  border-color: #475569;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
+}
+
+.radarr-card--selected {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+}
+
+.radarr-card-clickable {
+  cursor: pointer;
+}
+
+.radarr-card-poster {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.radarr-card-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.radarr-card:hover .radarr-card-poster img {
+  transform: scale(1.05);
+}
+
+.radarr-card-poster-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #334155;
+}
+
+.radarr-card-select {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.radarr-card-select:hover {
+  color: #6366f1;
+}
+
+.radarr-status-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+  backdrop-filter: blur(4px);
+}
+
+.radarr-status-on {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.radarr-status-off {
+  background: rgba(100, 116, 139, 0.3);
+  color: #94a3b8;
+}
+
+.radarr-user-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+  backdrop-filter: blur(4px);
+}
+
+.radarr-card-body {
+  padding: 0.9rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.radarr-card-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.radarr-card-meta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.radarr-card-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.radarr-card-tags {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.radarr-tag {
+  font-size: 0.65rem;
+  border: 1px solid;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.radarr-tag-sm {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.radarr-card-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+
+.radarr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.375rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.radarr-btn-edit {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+.radarr-btn-edit:hover {
+  border-color: #6366f1;
+  color: #a5b4fc;
+}
+
+.radarr-btn-delete {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+.radarr-btn-delete:hover {
+  border-color: #ef4444;
+  color: #f87171;
+}
+
+.radarr-btn-save {
+  background: #6366f1;
+  color: #fff;
+}
+
+.radarr-btn-save:hover {
+  background: #4f46e5;
+}
+
+.radarr-btn-cancel {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+.radarr-btn-cancel:hover {
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.radarr-card-edit {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.radarr-card-edit label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.radarr-card-edit label span {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.radarr-card-edit input,
+.radarr-card-edit textarea {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.65rem;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.radarr-card-edit input:focus,
+.radarr-card-edit textarea:focus {
+  border-color: #6366f1;
+}
+
+.radarr-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.radarr-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.radarr-list {
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.radarr-list-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #0f172a;
+  border-bottom: 1px solid #334155;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.radarr-list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid #1e293b;
+  background: #1e293b;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.radarr-list-row:hover {
+  background: #243044;
+}
+
+.radarr-list-row:last-child {
+  border-bottom: none;
+}
+
+.radarr-list-row--selected {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.radarr-list-check {
+  width: 30px;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+}
+
+.radarr-list-check:hover {
+  color: #6366f1;
+}
+
+.radarr-list-col {
+  font-size: 0.82rem;
+  color: #cbd5e1;
+}
+
+.radarr-list-col--title {
+  flex: 2;
+  min-width: 0;
+}
+
+.radarr-list-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.radarr-list-col--movies {
+  flex: 0.7;
+}
+
+.radarr-list-col--rating {
+  flex: 0.7;
+}
+
+.radarr-list-col--year {
+  flex: 0.8;
+}
+
+.radarr-list-col--user {
+  flex: 0.8;
+}
+
+.radarr-list-col--tags {
+  flex: 1;
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.radarr-list-col--actions {
+  flex: 0.8;
+  display: flex;
+  gap: 0.3rem;
+}
+
+.radarr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.radarr-modal-content {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 1rem;
+  max-width: 760px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.radarr-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 10;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid #334155;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.radarr-modal-close:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.radarr-modal-hero {
+  position: relative;
+  height: 220px;
+  background-size: cover;
+  background-position: center;
+  background-color: #0f172a;
+}
+
+.radarr-modal-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.3), #1e293b);
+}
+
+.radarr-modal-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  height: 100%;
+}
+
+.radarr-modal-poster {
+  width: 110px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.radarr-modal-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.radarr-modal-hero-info h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.radarr-modal-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.radarr-modal-meta-row span,
+.radarr-modal-meta-row a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+}
+
+.radarr-modal-tags {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.radarr-modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.radarr-modal-overview {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.radarr-modal-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.radarr-modal-movies {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.radarr-modal-movie-row {
+  background: #0f172a;
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.radarr-modal-movie-row span {
+  color: #94a3b8;
+}
+
+.radarr-modal-movie-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.radarr-status-pill {
+  background: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+}
+
+.radarr-modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #334155;
+}
