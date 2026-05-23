@@ -1,70 +1,67 @@
 import { Link } from "react-router-dom";
+import {
+  Container,
+  Tv,
+  Download,
+  Clapperboard,
+  ArrowRight,
+} from "lucide-react";
+import "./Index.css";
 
 const modules = [
   {
     name: "Portainer",
     path: "/portainer",
-    description: "Docker kontenerek, stackek es allapotok attekintese.",
+    description: "Docker konténerek, stackek és állapotok áttekintése.",
+    icon: Container,
+    color: "#3b82f6",
   },
   {
     name: "Sonarr",
     path: "/sonarr",
-    description: "Sonarr modul helye. A tovabbi integracio ide kerulhet.",
+    description: "Sorozatok kezelése, monitorozás és letöltés állapot.",
+    icon: Tv,
+    color: "#10b981",
   },
   {
     name: "qBittorrent",
     path: "/qbittorrent",
-    description: "Torrentek kezelese, sebesseg es allapot figyelese.",
+    description: "Torrentek kezelése, sebesség és állapot figyelése.",
+    icon: Download,
+    color: "#f59e0b",
   },
   {
     name: "Seerr",
     path: "/seerr",
-    description: "Filmek es sorozatok keresese, requestek kezelese felhasznalonkent.",
+    description: "Filmek és sorozatok keresése, requestek kezelése.",
+    icon: Clapperboard,
+    color: "#8b5cf6",
   },
 ];
 
 const Index = () => {
   return (
-    <div
-      style={{
-        maxWidth: 1200,
-        margin: "0 auto",
-        padding: "2rem 1.5rem",
-        color: "#e2e8f0",
-      }}
-    >
-      <div style={{ marginBottom: "1.5rem" }}>
-        <h1 style={{ fontSize: "2rem", fontWeight: 700, margin: 0 }}>ArrCore</h1>
-        <p style={{ color: "#94a3b8", marginTop: "0.5rem" }}>
-          Valassz egy modult az admin feluleten.
-        </p>
+    <div className="page-container">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">Válassz egy modult az admin felületen.</p>
+        </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: "1rem",
-        }}
-      >
+      <div className="dashboard-grid">
         {modules.map((module) => (
-          <Link
-            key={module.path}
-            to={module.path}
-            style={{
-              display: "block",
-              textDecoration: "none",
-              background: "#1e293b",
-              border: "1px solid #334155",
-              borderRadius: "12px",
-              padding: "1.25rem",
-              color: "#e2e8f0",
-            }}
-          >
-            <div style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-              {module.name}
+          <Link key={module.path} to={module.path} className="dashboard-card">
+            <div className="dashboard-card-icon" style={{ background: `${module.color}15` }}>
+              <module.icon size={24} style={{ color: module.color }} />
             </div>
-            <div style={{ color: "#94a3b8", lineHeight: 1.5 }}>{module.description}</div>
+            <div className="dashboard-card-content">
+              <h3 className="dashboard-card-title">{module.name}</h3>
+              <p className="dashboard-card-desc">{module.description}</p>
+            </div>
+            <div className="dashboard-card-arrow">
+              <ArrowRight size={16} />
+            </div>
           </Link>
         ))}
       </div>

@@ -229,6 +229,9 @@ export default function Seerr() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
 
+  // Request filter
+  const [requestSearch, setRequestSearch] = useState("");
+
   // Request modal
   const [modalItem, setModalItem] = useState<SearchResult | null>(null);
   const [tvDetails, setTvDetails] = useState<TvDetails | null>(null);
@@ -360,6 +363,16 @@ export default function Seerr() {
     return { total: requests.length, pending, approved, available };
   }, [requests]);
 
+  const filteredRequests = useMemo(() => {
+    if (!requestSearch.trim()) return requests;
+    const q = requestSearch.toLowerCase();
+    return requests.filter((r) => {
+      const title = (r.media?.title ?? "").toLowerCase();
+      const user = (r.requestedBy?.displayName ?? "").toLowerCase();
+      return title.includes(q) || user.includes(q);
+    });
+  }, [requests, requestSearch]);
+
   // ─── Render ──────────────────────────────────────────────────────────────
 
   if (loading) {
@@ -432,6 +445,20 @@ export default function Seerr() {
       {/* ─── Requests Tab ───────────────────────────────────────────────────── */}
       {activeTab === "requests" && (
         <div className="seerr-requests-section">
+          {/* Search filter */}
+          <div className="seerr-request-search-bar">
+            <div className="seerr-search-wrapper">
+              <Search size={16} className="seerr-search-icon" />
+              <input
+                type="text"
+                className="seerr-search-input"
+                placeholder="Search requests by title or user..."
+                value={requestSearch}
+                onChange={(e) => setRequestSearch(e.target.value)}
+              />
+            </div>
+          </div>
+
           {/* User filter */}
           <div className="seerr-user-filter">
             <span className="seerr-user-filter-label"><User size={14} /> Filter by user:</span>
@@ -454,7 +481,7 @@ export default function Seerr() {
           </div>
 
           {/* Requests table */}
-          {requests.length === 0 ? (
+          {filteredRequests.length === 0 ? (
             <div className="seerr-empty">No requests found.</div>
           ) : (
             <table className="seerr-requests-table">
@@ -468,7 +495,7 @@ export default function Seerr() {
                 </tr>
               </thead>
               <tbody>
-                {requests.map((req) => {
+                {filteredRequests.map((req) => {
                   const st = getStatusLabel(req.status);
                   return (
                     <tr key={req.id}>

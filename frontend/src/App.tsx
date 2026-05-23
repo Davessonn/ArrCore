@@ -1,4 +1,5 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import Layout from './components/layout/Layout'
 import Index from './pages/Index'
 import Portainer from './pages/Portainer'
 import Sonarr from './pages/Sonarr'
@@ -8,14 +9,16 @@ import './App.css'
 
 function App() {
   return (
-      <Routes>
+    <Routes>
+      <Route element={<Layout />}>
         <Route path="/" element={<Index />} />
         <Route path="/portainer" element={<Portainer />} />
         <Route path="/sonarr" element={<Sonarr />} />
         <Route path="/qbittorrent" element={<QBittorrent />} />
         <Route path="/seerr" element={<Seerr />} />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      </Route>
+    </Routes>
   )
 }
 
