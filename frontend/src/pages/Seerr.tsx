@@ -26,6 +26,18 @@ interface MediaInfo {
   status: number; // 1=unknown, 2=pending, 3=processing, 4=partially available, 5=available
 }
 
+interface SeerrMedia {
+  id: number;
+  tmdbId: number;
+  tvdbId?: number;
+  mediaType: "movie" | "tv";
+  status: number;
+  posterPath?: string;
+  title?: string;
+  name?: string;
+  externalServiceSlug?: string;
+}
+
 interface SearchResult {
   id: number;
   mediaType: "movie" | "tv" | "person";
@@ -51,15 +63,7 @@ interface SeerrRequest {
   status: number; // 1=pending, 2=approved, 3=declined
   type: "movie" | "tv";
   createdAt: string;
-  media: {
-    id: number;
-    tmdbId: number;
-    tvdbId?: number;
-    mediaType: "movie" | "tv";
-    status: number;
-    posterPath?: string;
-    title?: string;
-  };
+  media: SeerrMedia;
   requestedBy: SeerrUser;
   seasons?: { seasonNumber: number }[];
 }
@@ -72,8 +76,15 @@ interface RequestsResponse {
 interface TvDetails {
   id: number;
   name: string;
+  posterPath?: string;
   numberOfSeasons: number;
   seasons: { seasonNumber: number; episodeCount: number; name: string }[];
+}
+
+interface MovieDetails {
+  id: number;
+  title?: string;
+  posterPath?: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -109,6 +120,96 @@ function formatDate(dateStr: string): string {
     month: "short",
     day: "numeric",
   });
+}
+
+function slugToTitle(slug?: string): string | undefined {
+  if (!slug) return undefined;
+  if (/^\d+$/.test(slug)) return undefined;
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function normalizeRequest(raw: any): SeerrRequest {
+  const media = raw.media ?? {};
+  const fallbackTitle = media.title ?? media.name ?? slugToTitle(media.externalServiceSlug);
+
+  return {
+    id: raw.id,
+    status: raw.status,
+    type: raw.type,
+    createdAt: raw.createdAt,
+    media: {
+      id: media.id,
+      tmdbId: media.tmdbId,
+      tvdbId: media.tvdbId,
+      mediaType: media.mediaType ?? raw.type,
+      status: media.status,
+      posterPath: media.posterPath,
+      title: fallbackTitle,
+      name: media.name,
+      externalServiceSlug: media.externalServiceSlug,
+    },
+    requestedBy: {
+      id: raw.requestedBy?.id,
+      displayName: raw.requestedBy?.displayName ?? raw.requestedBy?.username ?? raw.requestedBy?.email ?? `User ${raw.requestedBy?.id ?? "?"}`,
+      avatar: raw.requestedBy?.avatar,
+      requestCount: raw.requestedBy?.requestCount ?? 0,
+    },
+    seasons: raw.seasons ?? [],
+  };
+}
+
+async function enrichRequestMedia(req: SeerrRequest): Promise<SeerrRequest> {
+  if ((req.media.title && req.media.posterPath) || !req.media.tmdbId) return req;
+
+  const endpoint = req.type === "tv" ? `/api/seerr/tv/${req.media.tmdbId}` : `/api/seerr/movie/${req.media.tmdbId}`;
+
+  try {
+    const res = await fetch(endpoint);
+    if (!res.ok) return req;
+
+    const details: TvDetails | MovieDetails = await res.json();
+    const resolvedTitle = req.type === "tv"
+      ? (details as TvDetails).name
+      : (details as MovieDetails).title;
+
+    return {
+      ...req,
+      media: {
+        ...req.media,
+        title: req.media.title ?? resolvedTitle ?? req.media.name,
+        posterPath: req.media.posterPath ?? details.posterPath,
+      },
+    };
+  } catch {
+    if (req.type !== "movie") return req;
+
+    try {
+      const searchRes = await fetch(`/api/seerr/search?query=${encodeURIComponent(String(req.media.tmdbId))}&page=1&language=en`);
+      if (!searchRes.ok) return req;
+
+      const searchData: SearchResponse = await searchRes.json();
+      const match = (searchData.results ?? []).find(
+        (item) => item.mediaType === "movie" && item.id === req.media.tmdbId
+      );
+
+      if (!match) return req;
+
+      return {
+        ...req,
+        media: {
+          ...req.media,
+          title: req.media.title ?? match.title ?? match.name,
+          posterPath: req.media.posterPath ?? match.posterPath,
+        },
+      };
+    } catch {
+      return req;
+    }
+  }
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -160,7 +261,9 @@ export default function Seerr() {
       const res = await fetch(`/api/seerr/request?${params}`);
       if (!res.ok) throw new Error("Failed to fetch requests");
       const data: RequestsResponse = await res.json();
-      setRequests(data.results ?? []);
+      const normalized = (data.results ?? []).map((request: any) => normalizeRequest(request));
+      const enriched = await Promise.all(normalized.map((request) => enrichRequestMedia(request)));
+      setRequests(enriched);
     } catch (e: any) {
       setError(e.message);
     }
