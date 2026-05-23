@@ -116,6 +116,19 @@ public class SeerrService {
                 .onStatus(HttpStatusCode::isError, this::handleError)
                 .bodyToMono(MAP_TYPE);
     }
+
+    /**
+     * GET /api/v1/movie/{id}
+     */
+    public Mono<Map<String, Object>> getMovieDetails(Long id) {
+        return webClient.get()
+                .uri(seerrUrl + "/api/v1/movie/{id}", id)
+                .header("X-Api-Key", apiKey)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::handleError)
+                .bodyToMono(MAP_TYPE);
+    }
 }
 
 

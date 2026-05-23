@@ -41,5 +41,10 @@ public class SeerrController {
     public Mono<Map<String, Object>> getTvDetails(@PathVariable Long id) {
         return seerrService.getTvDetails(id);
     }
+
+    @GetMapping("/movie/{id}")
+    public Mono<Map<String, Object>> getMovieDetails(@PathVariable Long id) {
+        return seerrService.getMovieDetails(id);
+    }
 }
 
