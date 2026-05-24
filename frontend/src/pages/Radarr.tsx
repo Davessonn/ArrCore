@@ -206,7 +206,7 @@ function CollectionModal({
 }: {
 	collection: RadarrCollection;
 	onClose: () => void;
-	onDelete: (id: number) => void;
+	onDelete: (collection: RadarrCollection) => void;
 	onEdit: (collection: RadarrCollection) => void;
 }) {
 	const poster = getPoster(collection.images);
@@ -292,7 +292,7 @@ function CollectionModal({
 						<button className="radarr-btn radarr-btn-edit" onClick={() => { onClose(); onEdit(collection); }}>
 							<Edit3 size={14} /> Edit
 						</button>
-						<button className="radarr-btn radarr-btn-delete" onClick={() => { onClose(); onDelete(collection.tmdbId); }}>
+						<button className="radarr-btn radarr-btn-delete" onClick={() => { onClose(); onDelete(collection); }}>
 							<Trash2 size={14} /> Delete
 						</button>
 					</div>
@@ -305,6 +305,7 @@ function CollectionModal({
 const Radarr = () => {
 	const [collections, setCollections] = useState<RadarrCollection[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 	const [search, setSearch] = useState("");
 	const [statusFilter, setStatusFilter] = useState<"all" | "monitored" | "unmonitored">("all");
 	const [userFilter, setUserFilter] = useState<string>("all");
@@ -317,14 +318,27 @@ const Radarr = () => {
 	const [editForm, setEditForm] = useState({ title: "", rootFolderPath: "", overview: "" });
 	const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
+	const getCollectionKey = (collection: RadarrCollection) => collection.id ?? collection.tmdbId;
+
+	const loadCollections = async () => {
+		try {
+			const res = await fetch("/api/radarr/movies");
+			if (!res.ok) {
+				throw new Error(`HTTP ${res.status}`);
+			}
+
+			const data: RadarrApiItem[] = await res.json();
+			setCollections(Array.isArray(data) ? data.map(normalizeCollection) : []);
+			setError(null);
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Failed to load collections");
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	useEffect(() => {
-		fetch("/api/radarr/movies")
-			.then((res) => res.json())
-			.then((data: RadarrApiItem[]) => {
-				setCollections(Array.isArray(data) ? data.map(normalizeCollection) : []);
-				setLoading(false);
-			})
-			.catch(() => setLoading(false));
+		void loadCollections();
 	}, []);
 
 	const users = useMemo(() => {
@@ -391,21 +405,74 @@ const Radarr = () => {
 		return formatRuntime(Math.round(sum / movies.length));
 	}, [collections]);
 
-	const handleDelete = (id: number) => {
+	const handleDelete = async (collection: RadarrCollection) => {
 		if (!window.confirm("Are you sure you want to delete this collection?")) return;
-		setCollections((prev) => prev.filter((c) => c.tmdbId !== id));
-		setSelectedIds((prev) => {
-			const next = new Set(prev);
-			next.delete(id);
-			return next;
-		});
+		if (collection.id == null) {
+			setError("Failed to delete collection: missing Radarr id.");
+			return;
+		}
+
+		setError(null);
+
+		try {
+			const response = await fetch(`/api/radarr/movies/${collection.id}`, {
+				method: "DELETE",
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`);
+			}
+
+			setSelectedIds((prev) => {
+				const next = new Set(prev);
+				next.delete(getCollectionKey(collection));
+				return next;
+			});
+			setSelectedCollection((prev) =>
+				prev && getCollectionKey(prev) === getCollectionKey(collection) ? null : prev
+			);
+			await loadCollections();
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Failed to delete collection");
+		}
 	};
 
-	const handleBatchDelete = () => {
+	const handleBatchDelete = async () => {
 		if (selectedIds.size === 0) return;
 		if (!window.confirm(`Delete ${selectedIds.size} selected collections?`)) return;
-		setCollections((prev) => prev.filter((c) => !selectedIds.has(c.tmdbId)));
-		setSelectedIds(new Set());
+
+		const selectedCollections = collections.filter((collection) =>
+			selectedIds.has(getCollectionKey(collection))
+		);
+		const missingIds = selectedCollections.some((collection) => collection.id == null);
+		if (missingIds) {
+			setError("Failed to delete one or more collections: missing Radarr id.");
+			return;
+		}
+
+		setError(null);
+
+		try {
+			await Promise.all(
+				selectedCollections.map(async (collection) => {
+					const response = await fetch(`/api/radarr/movies/${collection.id}`, {
+						method: "DELETE",
+					});
+
+					if (!response.ok) {
+						throw new Error(`HTTP ${response.status}`);
+					}
+				})
+			);
+
+			setSelectedIds(new Set());
+			setSelectedCollection((prev) =>
+				prev && selectedIds.has(getCollectionKey(prev)) ? null : prev
+			);
+			await loadCollections();
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Failed to delete collections");
+		}
 	};
 
 	const toggleSelect = (id: number) => {
@@ -424,7 +491,7 @@ const Radarr = () => {
 		if (selectedIds.size === filtered.length) {
 			setSelectedIds(new Set());
 		} else {
-			setSelectedIds(new Set(filtered.map((c) => c.tmdbId)));
+			setSelectedIds(new Set(filtered.map((collection) => getCollectionKey(collection))));
 		}
 	};
 
@@ -558,6 +625,8 @@ const Radarr = () => {
 				</div>
 			</div>
 
+			{error && <div className="radarr-empty">{error}</div>}
+
 			<div className="radarr-sort-row">
 				<span className="radarr-sort-label">
 					<ArrowUpDown size={14} /> Sort by:
@@ -597,7 +666,7 @@ const Radarr = () => {
 					{filtered.map((collection) => (
 						<div
 							key={collection.tmdbId}
-							className={`radarr-card ${selectedIds.has(collection.tmdbId) ? "radarr-card--selected" : ""}`}
+							className={`radarr-card ${selectedIds.has(getCollectionKey(collection)) ? "radarr-card--selected" : ""}`}
 						>
 							{editingId === collection.tmdbId ? (
 								<div className="radarr-card-edit">
@@ -650,10 +719,10 @@ const Radarr = () => {
 											className="radarr-card-select"
 											onClick={(e) => {
 												e.stopPropagation();
-												toggleSelect(collection.tmdbId);
+												toggleSelect(getCollectionKey(collection));
 											}}
 										>
-											{selectedIds.has(collection.tmdbId) ? <CheckSquare size={18} /> : <Square size={18} />}
+											{selectedIds.has(getCollectionKey(collection)) ? <CheckSquare size={18} /> : <Square size={18} />}
 										</button>
 									</div>
 									<div className="radarr-card-body">
@@ -689,7 +758,7 @@ const Radarr = () => {
 											<button className="radarr-btn radarr-btn-edit" onClick={() => startEdit(collection)}>
 												<Edit3 size={14} />
 											</button>
-											<button className="radarr-btn radarr-btn-delete" onClick={() => handleDelete(collection.tmdbId)}>
+											<button className="radarr-btn radarr-btn-delete" onClick={() => void handleDelete(collection)}>
 												<Trash2 size={14} />
 											</button>
 										</div>
@@ -722,17 +791,17 @@ const Radarr = () => {
 					{filtered.map((collection) => (
 						<div
 							key={collection.tmdbId}
-							className={`radarr-list-row ${selectedIds.has(collection.tmdbId) ? "radarr-list-row--selected" : ""}`}
+							className={`radarr-list-row ${selectedIds.has(getCollectionKey(collection)) ? "radarr-list-row--selected" : ""}`}
 							onClick={() => setSelectedCollection(collection)}
 						>
 							<div
 								className="radarr-list-check"
 								onClick={(e) => {
 									e.stopPropagation();
-									toggleSelect(collection.tmdbId);
+									toggleSelect(getCollectionKey(collection));
 								}}
 							>
-								{selectedIds.has(collection.tmdbId) ? <CheckSquare size={16} /> : <Square size={16} />}
+								{selectedIds.has(getCollectionKey(collection)) ? <CheckSquare size={16} /> : <Square size={16} />}
 							</div>
 							<div className="radarr-list-col radarr-list-col--title">
 								<span className="radarr-list-title">{collection.title}</span>
@@ -762,7 +831,7 @@ const Radarr = () => {
 								<button className="radarr-btn radarr-btn-edit" onClick={() => startEdit(collection)}>
 									<Edit3 size={13} />
 								</button>
-								<button className="radarr-btn radarr-btn-delete" onClick={() => handleDelete(collection.tmdbId)}>
+								<button className="radarr-btn radarr-btn-delete" onClick={() => void handleDelete(collection)}>
 									<Trash2 size={13} />
 								</button>
 							</div>
