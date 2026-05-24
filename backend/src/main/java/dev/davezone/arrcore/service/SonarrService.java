@@ -16,7 +16,7 @@ public class SonarrService {
 
     private static final String SERVICE_NAME = "sonarr";
     private static final String ALL_SERIES_API_PATH = "api/v3/series";
-    private static final String DELETE_SERIES_API_PATH = "api/v3/series/{id}";
+    private static final String DELETE_SERIES_API_PATH = "api/v3/series/{id}?deleteFiles=true&addImportListExclusion=false";
     private static final String GET_SERIES_BY_ID_API_PATH = "api/v3/series/{id}";
     private static final String UPDATE_SERIES_API_PATH = "api/v3/series/{id}";
 

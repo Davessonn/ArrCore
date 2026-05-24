@@ -11,7 +11,7 @@ public class RadarrService {
 
     private static final String SERVICE_NAME = "radarr";
     private static final String ALL_MOVIES_API_PATH = "api/v3/movie";
-    private static final String DELETE_MOVIE_API_PATH = "api/v3/movie/{id}";
+    private static final String DELETE_MOVIE_API_PATH = "api/v3/movie/{id}?deleteFiles=true&addImportListExclusion=false";
 
     private final WebClient webClient;
     private final SettingsService settingsService;

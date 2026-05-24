@@ -3,10 +3,7 @@ package dev.davezone.arrcore.controller;
 import dev.davezone.arrcore.dto.RadarrDTO;
 import dev.davezone.arrcore.service.RadarrService;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -23,7 +20,7 @@ public class RadarrController {
     }
 
     @DeleteMapping("/movies/{id}")
-    public Mono<Void> deleteMovie(Long id) {
+    public Mono<Void> deleteMovie(@PathVariable Long id) {
         return radarrService.deleteMovie(id);
     }
 }
