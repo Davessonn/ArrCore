@@ -11,10 +11,14 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class QbittorrentService {
@@ -123,18 +127,60 @@ public class QbittorrentService {
     }
 
     private Mono<String> postAddTorrent(MultiValueMap<String, Object> form) {
+        String boundary = "----WebKitFormBoundary" + UUID.randomUUID().toString().replace("-", "");
+        String body = buildMultipartBody(boundary, form);
+
         return getSessionCookie()
                 .flatMap(cookie ->
                         settingsService.getDecryptedUrl(SERVICE_NAME).flatMap(url ->
                                 webClient.post()
                                         .uri(url + "/api/v2/torrents/add")
                                         .header(HttpHeaders.COOKIE, cookie)
-                                        .contentType(MediaType.MULTIPART_FORM_DATA)
-                                        .body(BodyInserters.fromMultipartData(form))
+                                        .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + boundary)
+                                        .bodyValue(body.getBytes(StandardCharsets.UTF_8))
                                         .retrieve()
                                         .bodyToMono(String.class)
+                                        .defaultIfEmpty("Ok.")
                         )
-                );
+                )
+                // Retry once on 403 (expired session), treat connection reset on 200 as success
+                .onErrorResume(ex -> {
+                    if (ex instanceof WebClientResponseException wce
+                            && wce.getStatusCode().value() == 200
+                            && wce.getCause() instanceof SocketException) {
+                        return Mono.just("Ok.");
+                    }
+                    if (ex instanceof WebClientResponseException.Forbidden) {
+                        this.sessionCookie = null;
+                        return login().flatMap(cookie ->
+                                settingsService.getDecryptedUrl(SERVICE_NAME).flatMap(url ->
+                                        webClient.post()
+                                                .uri(url + "/api/v2/torrents/add")
+                                                .header(HttpHeaders.COOKIE, cookie)
+                                                .header(HttpHeaders.CONTENT_TYPE, "multipart/form-data; boundary=" + boundary)
+                                                .bodyValue(body.getBytes(StandardCharsets.UTF_8))
+                                                .retrieve()
+                                                .bodyToMono(String.class)
+                                                .defaultIfEmpty("Ok.")
+                                )
+                        );
+                    }
+                    return Mono.error(ex);
+                });
+    }
+
+    private String buildMultipartBody(String boundary, MultiValueMap<String, Object> form) {
+        StringBuilder sb = new StringBuilder();
+        form.forEach((key, values) -> {
+            for (Object value : values) {
+                sb.append("--").append(boundary).append("\r\n");
+                sb.append("Content-Disposition: form-data; name=\"").append(key).append("\"\r\n");
+                sb.append("\r\n");
+                sb.append(value.toString()).append("\r\n");
+            }
+        });
+        sb.append("--").append(boundary).append("--\r\n");
+        return sb.toString();
     }
 
     private void addIfPresent(MultiValueMap<String, Object> form, String key, String value) {
