@@ -15,6 +15,7 @@ const navItems = [
   { path: "/", icon: LayoutDashboard, label: "Dashboard" },
   { path: "/portainer", icon: Container, label: "Portainer" },
   { path: "/sonarr", icon: Tv, label: "Sonarr" },
+  { path: "/radarr", icon: Clapperboard, label: "Radarr" },
   { path: "/qbittorrent", icon: Download, label: "qBittorrent" },
   { path: "/seerr", icon: Clapperboard, label: "Seerr" },
   { path: "/settings", icon: Settings, label: "Settings" },

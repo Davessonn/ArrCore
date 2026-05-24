@@ -340,27 +340,29 @@ export default function QBittorrent() {
       return;
     }
 
-    const payload = new FormData();
-    payload.set("urls", addForm.urls.trim());
+    const payload: Record<string, string | boolean> = {
+      urls: addForm.urls.trim(),
+    };
 
-    if (addForm.savePath.trim()) payload.set("savepath", addForm.savePath.trim());
-    if (addForm.category.trim()) payload.set("category", addForm.category.trim());
-    if (addForm.tags.trim()) payload.set("tags", addForm.tags.trim());
-    if (addForm.rename.trim()) payload.set("rename", addForm.rename.trim());
-    if (addForm.paused) payload.set("paused", "true");
-    if (addForm.autoTmm) payload.set("autoTMM", "true");
-    if (addForm.sequentialDownload) payload.set("sequentialDownload", "true");
-    if (addForm.firstLastPiecePrio) payload.set("firstLastPiecePrio", "true");
-    if (addForm.skipChecking) payload.set("skip_checking", "true");
-    if (addForm.rootFolder) payload.set("root_folder", "true");
+    if (addForm.savePath.trim()) payload.savePath = addForm.savePath.trim();
+    if (addForm.category.trim()) payload.category = addForm.category.trim();
+    if (addForm.tags.trim()) payload.tags = addForm.tags.trim();
+    if (addForm.rename.trim()) payload.rename = addForm.rename.trim();
+    if (addForm.paused) payload.paused = true;
+    if (addForm.autoTmm) payload.autoTmm = true;
+    if (addForm.sequentialDownload) payload.sequentialDownload = true;
+    if (addForm.firstLastPiecePrio) payload.firstLastPiecePrio = true;
+    if (addForm.skipChecking) payload.skipChecking = true;
+    if (addForm.rootFolder) payload.rootFolder = true;
 
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      const response = await fetch("/api/qbittorrent/torrents/add-form", {
+      const response = await fetch("/api/qbittorrent/torrents/add", {
         method: "POST",
-        body: payload,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       const message = (await response.text()).trim();
