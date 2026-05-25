@@ -771,6 +771,240 @@
   background: linear-gradient(to bottom, rgba(15, 23, 42, 0.3), var(--color-bg-card));
 }
 
+/* --- Release Search Modal --- */
+
+.radarr-release-modal {
+  width: 95vw;
+  max-width: 1200px;
+  max-height: 85vh;
+  background: rgba(16, 20, 35, 0.96);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border-hover);
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.45);
+}
+
+.radarr-release-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.58), rgba(15, 23, 42, 0.2));
+}
+
+.radarr-release-modal-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.radarr-release-modal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 1rem 1.25rem 1.25rem;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.2), rgba(15, 23, 42, 0.45));
+}
+
+.radarr-release-modal .radarr-modal-close {
+  position: static;
+  background: rgba(15, 23, 42, 0.78);
+}
+
+.radarr-release-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.radarr-release-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--color-text-muted);
+}
+
+.radarr-release-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--glass-border);
+  border-radius: 0.9rem;
+  background: rgba(15, 23, 42, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.radarr-release-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.radarr-release-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.radarr-release-table th {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--glass-border);
+  white-space: nowrap;
+  background: rgba(15, 23, 42, 0.84);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.radarr-release-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  vertical-align: top;
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.radarr-release-table tbody tr:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.radarr-release-table tbody tr:hover td {
+  background: rgba(30, 41, 59, 0.68);
+}
+
+.radarr-release-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.radarr-release-sort-button:hover {
+  color: var(--color-text-primary);
+}
+
+.radarr-release-sort-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  color: var(--color-text-muted);
+}
+
+.radarr-release-sort-indicator.is-active {
+  color: var(--color-accent);
+}
+
+.radarr-release-title-cell {
+  max-width: 350px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.radarr-release-rejections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.radarr-release-rejections span {
+  font-size: 0.75rem;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.radarr-release-rejected {
+  opacity: 0.78;
+}
+
+.radarr-release-approved td:first-child {
+  border-left: 3px solid #22c55e;
+}
+
+.radarr-release-rejected td:first-child {
+  border-left: 3px solid #ef4444;
+}
+
+.radarr-btn-grab {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.radarr-btn-grab:hover {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.radarr-btn-grab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .radarr-release-modal {
+    width: min(96vw, 960px);
+  }
+
+  .radarr-release-summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .radarr-release-table td {
+    padding: 0.65rem 0.75rem;
+  }
+}
+
+.radarr-btn-search {
+  background: var(--color-bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.radarr-btn-search:hover {
+  border-color: #22c55e;
+  color: #4ade80;
+}
+
+@keyframes radarr-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.radarr-spin {
+  animation: radarr-spin 1s linear infinite;
+}
+
 .radarr-modal-hero-inner {
   position: relative;
   z-index: 1;

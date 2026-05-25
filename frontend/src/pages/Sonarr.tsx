@@ -6,6 +6,7 @@ import {
   CheckSquare,
   Clock,
   Database,
+  Download,
   Edit3,
   ExternalLink,
   Filter,
@@ -13,6 +14,7 @@ import {
   HardDrive,
   LayoutGrid,
   List,
+  Loader2,
   Play,
   Search,
   Server,
@@ -85,6 +87,46 @@ interface Series {
 type SortKey = "title" | "year" | "rating" | "size" | "added" | "percent";
 type SortDir = "asc" | "desc";
 type ViewMode = "grid" | "list";
+type ReleaseSortKey = "title" | "quality" | "size" | "indexer" | "seeders" | "leechers" | "age" | "languages";
+
+interface SonarrReleaseQuality {
+  quality?: {
+    id?: number;
+    name?: string;
+    source?: string;
+    resolution?: number;
+  };
+}
+
+interface SonarrReleaseEpisodeInfo {
+  id: number;
+  seasonNumber: number;
+  episodeNumber: number;
+  absoluteEpisodeNumber?: number;
+  title: string;
+}
+
+interface SonarrRelease {
+  guid: string;
+  title: string;
+  quality: SonarrReleaseQuality;
+  age: number;
+  size: number;
+  indexerId: number;
+  indexer: string;
+  fullSeason: boolean;
+  seasonNumber: number;
+  languages: { id: number; name: string }[];
+  approved: boolean;
+  temporarilyRejected: boolean;
+  rejected: boolean;
+  rejections: string[];
+  mappedEpisodeInfo?: SonarrReleaseEpisodeInfo[];
+  seeders: number;
+  leechers: number;
+  protocol: string;
+  downloadAllowed: boolean;
+}
 
 const TAG_COLORS: Record<string, string> = {
   david: "#6366f1",
@@ -122,6 +164,26 @@ const joinPath = (parentPath: string, childPath: string) => {
   return `${parentPath.replace(/[\\/]+$/, "")}${separator}${childPath}`;
 };
 
+const getReleaseQualityName = (release: SonarrRelease) =>
+  release.quality?.quality?.name ?? "";
+
+const getReleaseLanguages = (release: SonarrRelease) =>
+  release.languages?.map((language) => language.name).join(", ") ?? "";
+
+const getReleaseEpisodeSummary = (release: SonarrRelease) => {
+  if (release.fullSeason) {
+    return `Season ${release.seasonNumber} full season`;
+  }
+
+  if (release.mappedEpisodeInfo?.length) {
+    return release.mappedEpisodeInfo
+      .map((episode) => `E${episode.episodeNumber} ${episode.title}`)
+      .join(", ");
+  }
+
+  return release.seasonNumber > 0 ? `Season ${release.seasonNumber}` : "";
+};
+
 
 
 function StatCard({
@@ -153,12 +215,14 @@ function SeriesModal({
   onClose,
   onDelete,
   onEdit,
+  onInteractiveSearch,
   tagMap,
 }: {
   series: Series;
   onClose: () => void;
   onDelete: (id: number) => void;
   onEdit: (s: Series) => void;
+  onInteractiveSearch: (s: Series) => void;
   tagMap: Record<number, string>;
 }) {
   const fanart = getFanart(s.images);
@@ -313,6 +377,15 @@ function SeriesModal({
           </div>
           <div className="modal-actions">
             <button
+              className="sonarr-btn sonarr-btn-search"
+              onClick={() => {
+                onClose();
+                onInteractiveSearch(s);
+              }}
+            >
+              <Search size={14} /> Search Releases
+            </button>
+            <button
               className="sonarr-btn sonarr-btn-edit"
               onClick={() => {
                 onClose();
@@ -331,6 +404,240 @@ function SeriesModal({
               <Trash2 size={14} /> Delete
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReleaseSearchModal({
+  series,
+  selectedSeasonNumber,
+  onSeasonChange,
+  releases,
+  loading,
+  onClose,
+  onGrab,
+  grabbingGuid,
+}: {
+  series: Series;
+  selectedSeasonNumber: number;
+  onSeasonChange: (seasonNumber: number) => void;
+  releases: SonarrRelease[];
+  loading: boolean;
+  onClose: () => void;
+  onGrab: (release: SonarrRelease) => void;
+  grabbingGuid: string | null;
+}) {
+  const [releaseSortKey, setReleaseSortKey] = useState<ReleaseSortKey>("age");
+  const [releaseSortDir, setReleaseSortDir] = useState<SortDir>("asc");
+
+  const searchableSeasons = useMemo(
+    () => series.seasons.filter((season) => season.seasonNumber > 0),
+    [series.seasons]
+  );
+
+  const sortedReleases = useMemo(() => {
+    const collator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
+    const result = [...releases];
+
+    result.sort((left, right) => {
+      let comparison = 0;
+
+      switch (releaseSortKey) {
+        case "title":
+          comparison = collator.compare(left.title, right.title);
+          break;
+        case "quality":
+          comparison = collator.compare(getReleaseQualityName(left), getReleaseQualityName(right));
+          break;
+        case "size":
+          comparison = left.size - right.size;
+          break;
+        case "indexer":
+          comparison = collator.compare(left.indexer, right.indexer);
+          break;
+        case "seeders":
+          comparison = left.seeders - right.seeders;
+          break;
+        case "leechers":
+          comparison = left.leechers - right.leechers;
+          break;
+        case "age":
+          comparison = left.age - right.age;
+          break;
+        case "languages":
+          comparison = collator.compare(getReleaseLanguages(left), getReleaseLanguages(right));
+          break;
+      }
+
+      if (comparison === 0) {
+        comparison = collator.compare(left.title, right.title);
+      }
+
+      return releaseSortDir === "asc" ? comparison : -comparison;
+    });
+
+    return result;
+  }, [releaseSortDir, releaseSortKey, releases]);
+
+  const toggleReleaseSort = (key: ReleaseSortKey) => {
+    if (releaseSortKey === key) {
+      setReleaseSortDir((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+
+    setReleaseSortKey(key);
+    setReleaseSortDir(key === "age" ? "asc" : "desc");
+  };
+
+  const renderSortLabel = (key: ReleaseSortKey, label: string) => (
+    <>
+      <span>{label}</span>
+      <span className={`sonarr-release-sort-indicator ${releaseSortKey === key ? "is-active" : ""}`}>
+        {releaseSortKey === key ? (releaseSortDir === "asc" ? "↑" : "↓") : <ArrowUpDown size={12} />}
+      </span>
+    </>
+  );
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="sonarr-release-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="sonarr-release-header">
+          <div>
+            <h2>
+              <Search size={18} /> Interactive Search - {series.title}
+            </h2>
+            <p>Choose a season, review releases, then grab the one you want.</p>
+          </div>
+          <button className="modal-close" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="sonarr-release-body">
+          <div className="sonarr-release-toolbar">
+            <label className="sonarr-release-season-picker">
+              <span>Season</span>
+              <select
+                value={selectedSeasonNumber}
+                onChange={(event) => onSeasonChange(Number(event.target.value))}
+              >
+                {searchableSeasons.map((season) => (
+                  <option key={season.seasonNumber} value={season.seasonNumber}>
+                    Season {season.seasonNumber}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="sonarr-release-summary">
+              <span>{sortedReleases.length} releases</span>
+              <span>
+                Sorted by {releaseSortKey} {releaseSortDir === "asc" ? "ascending" : "descending"}
+              </span>
+            </div>
+          </div>
+
+          {searchableSeasons.length === 0 ? (
+            <div className="sonarr-release-empty">No searchable seasons found for this series.</div>
+          ) : loading ? (
+            <div className="sonarr-release-loading">
+              <Loader2 size={24} className="sonarr-spin" /> Searching releases...
+            </div>
+          ) : releases.length === 0 ? (
+            <div className="sonarr-release-empty">No releases found for the selected season.</div>
+          ) : (
+            <div className="sonarr-release-table-wrapper">
+              <table className="sonarr-release-table">
+                <thead>
+                  <tr>
+                    <th>
+                      <button className="sonarr-release-sort-button" onClick={() => toggleReleaseSort("title")}>
+                        {renderSortLabel("title", "Title")}
+                      </button>
+                    </th>
+                    <th>
+                      <button className="sonarr-release-sort-button" onClick={() => toggleReleaseSort("quality")}>
+                        {renderSortLabel("quality", "Quality")}
+                      </button>
+                    </th>
+                    <th>
+                      <button className="sonarr-release-sort-button" onClick={() => toggleReleaseSort("size")}>
+                        {renderSortLabel("size", "Size")}
+                      </button>
+                    </th>
+                    <th>
+                      <button className="sonarr-release-sort-button" onClick={() => toggleReleaseSort("indexer")}>
+                        {renderSortLabel("indexer", "Indexer")}
+                      </button>
+                    </th>
+                    <th>
+                      <button className="sonarr-release-sort-button" onClick={() => toggleReleaseSort("seeders")}>
+                        {renderSortLabel("seeders", "Seeds")}
+                      </button>
+                    </th>
+                    <th>
+                      <button className="sonarr-release-sort-button" onClick={() => toggleReleaseSort("leechers")}>
+                        {renderSortLabel("leechers", "Peers")}
+                      </button>
+                    </th>
+                    <th>
+                      <button className="sonarr-release-sort-button" onClick={() => toggleReleaseSort("age")}>
+                        {renderSortLabel("age", "Age")}
+                      </button>
+                    </th>
+                    <th>
+                      <button className="sonarr-release-sort-button" onClick={() => toggleReleaseSort("languages")}>
+                        {renderSortLabel("languages", "Lang")}
+                      </button>
+                    </th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedReleases.map((release) => (
+                    <tr
+                      key={release.guid}
+                      className={release.rejected || release.temporarilyRejected ? "sonarr-release-rejected" : "sonarr-release-approved"}
+                    >
+                      <td className="sonarr-release-title-cell" title={release.title}>
+                        <div className="sonarr-release-title">{release.title}</div>
+                        <div className="sonarr-release-meta">{getReleaseEpisodeSummary(release)}</div>
+                        {(release.rejected || release.temporarilyRejected) && release.rejections?.length > 0 && (
+                          <div className="sonarr-release-rejections">
+                            {release.rejections.map((rejection, index) => (
+                              <span key={`${release.guid}-${index}`}>{rejection}</span>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td>{getReleaseQualityName(release) || "-"}</td>
+                      <td>{formatSize(release.size)}</td>
+                      <td>{release.indexer}</td>
+                      <td>{release.protocol === "torrent" ? release.seeders : "-"}</td>
+                      <td>{release.protocol === "torrent" ? release.leechers : "-"}</td>
+                      <td>{release.age}d</td>
+                      <td>{getReleaseLanguages(release) || "-"}</td>
+                      <td>
+                        <button
+                          className="sonarr-btn sonarr-btn-grab"
+                          disabled={grabbingGuid === release.guid || !release.downloadAllowed}
+                          onClick={() => onGrab(release)}
+                          title={release.downloadAllowed ? "Grab release" : "Download not allowed"}
+                        >
+                          {grabbingGuid === release.guid ? (
+                            <Loader2 size={14} className="sonarr-spin" />
+                          ) : (
+                            <Download size={14} />
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -357,6 +664,11 @@ const Sonarr = () => {
   const [editForm, setEditForm] = useState({ path: "", tags: [] as number[] });
   const [moveFiles, setMoveFiles] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [releaseSearchSeries, setReleaseSearchSeries] = useState<Series | null>(null);
+  const [releaseSeasonNumber, setReleaseSeasonNumber] = useState<number>(1);
+  const [releases, setReleases] = useState<SonarrRelease[]>([]);
+  const [releasesLoading, setReleasesLoading] = useState(false);
+  const [grabbingGuid, setGrabbingGuid] = useState<string | null>(null);
 
   const tagMap = useMemo(() => {
     const map: Record<number, string> = {};
@@ -606,6 +918,92 @@ const Sonarr = () => {
     } else {
       setSortKey(key);
       setSortDir("asc");
+    }
+  };
+
+  const getSearchableSeasons = (seriesItem: Series) =>
+    seriesItem.seasons.filter((season) => season.seasonNumber > 0);
+
+  const getInitialSeasonNumber = (seriesItem: Series) => {
+    const searchableSeasons = getSearchableSeasons(seriesItem);
+    return searchableSeasons.find((season) => season.monitored)?.seasonNumber
+      ?? searchableSeasons[0]?.seasonNumber
+      ?? 1;
+  };
+
+  const loadReleases = async (seriesId: number, seasonNumber: number) => {
+    setReleasesLoading(true);
+
+    try {
+      const response = await fetch(
+        `/api/sonarr/release?seriesId=${seriesId}&seasonNumber=${seasonNumber}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json() as SonarrRelease[];
+      setReleases(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to search releases");
+      setReleases([]);
+    } finally {
+      setReleasesLoading(false);
+    }
+  };
+
+  const openReleaseSearch = async (seriesItem: Series) => {
+    const initialSeasonNumber = getInitialSeasonNumber(seriesItem);
+    setError(null);
+    setReleaseSearchSeries(seriesItem);
+    setReleaseSeasonNumber(initialSeasonNumber);
+    setReleases([]);
+
+    if (getSearchableSeasons(seriesItem).length === 0) {
+      return;
+    }
+
+    await loadReleases(seriesItem.id, initialSeasonNumber);
+  };
+
+  const closeReleaseSearch = () => {
+    setReleaseSearchSeries(null);
+    setReleases([]);
+    setReleasesLoading(false);
+    setGrabbingGuid(null);
+  };
+
+  const handleSeasonChange = async (seasonNumber: number) => {
+    if (!releaseSearchSeries) {
+      return;
+    }
+
+    setReleaseSeasonNumber(seasonNumber);
+    await loadReleases(releaseSearchSeries.id, seasonNumber);
+  };
+
+  const handleGrabRelease = async (release: SonarrRelease) => {
+    setGrabbingGuid(release.guid);
+
+    try {
+      const response = await fetch("/api/sonarr/release", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(release),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      setReleases((current) => current.filter((item) => item.guid !== release.guid));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to grab release");
+    } finally {
+      setGrabbingGuid(null);
     }
   };
 
@@ -888,6 +1286,9 @@ const Sonarr = () => {
                       className="sonarr-card-actions"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      <button className="sonarr-btn sonarr-btn-search" onClick={() => void openReleaseSearch(s)}>
+                        <Search size={14} />
+                      </button>
                       <button className="sonarr-btn sonarr-btn-edit" onClick={() => startEdit(s)}>
                         <Edit3 size={14} />
                       </button>
@@ -975,6 +1376,9 @@ const Sonarr = () => {
                 className="sonarr-list-col sonarr-list-col--actions"
                 onClick={(e) => e.stopPropagation()}
               >
+                <button className="sonarr-btn sonarr-btn-search" onClick={() => void openReleaseSearch(s)}>
+                  <Search size={13} />
+                </button>
                 <button className="sonarr-btn sonarr-btn-edit" onClick={() => startEdit(s)}>
                   <Edit3 size={13} />
                 </button>
@@ -995,7 +1399,27 @@ const Sonarr = () => {
           onClose={() => setSelectedSeries(null)}
           onDelete={handleDelete}
           onEdit={startEdit}
+          onInteractiveSearch={(seriesItem) => {
+            void openReleaseSearch(seriesItem);
+          }}
           tagMap={tagMap}
+        />
+      )}
+
+      {releaseSearchSeries && (
+        <ReleaseSearchModal
+          series={releaseSearchSeries}
+          selectedSeasonNumber={releaseSeasonNumber}
+          onSeasonChange={(seasonNumber) => {
+            void handleSeasonChange(seasonNumber);
+          }}
+          releases={releases}
+          loading={releasesLoading}
+          onClose={closeReleaseSearch}
+          onGrab={(release) => {
+            void handleGrabRelease(release);
+          }}
+          grabbingGuid={grabbingGuid}
         />
       )}
     </div>

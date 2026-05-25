@@ -4,12 +4,14 @@ import {
 	Calendar,
 	Check,
 	CheckSquare,
+	Download,
 	Edit3,
 	ExternalLink,
 	Filter,
 	Film,
 	LayoutGrid,
 	List,
+	Loader2,
 	Search,
 	Square,
 	Star,
@@ -104,6 +106,28 @@ interface RadarrApiItem extends Omit<RadarrCollection, "movies" | "images" | "ta
 type SortKey = "title" | "movies" | "rating" | "year";
 type SortDir = "asc" | "desc";
 type ViewMode = "grid" | "list";
+type ReleaseSortKey = "title" | "quality" | "size" | "indexer" | "seeders" | "leechers" | "age" | "languages";
+
+interface ReleaseQuality {
+	quality?: { name?: string };
+}
+
+interface Release {
+	guid: string;
+	title: string;
+	quality: ReleaseQuality;
+	size: number;
+	indexer: string;
+	indexerId: number;
+	seeders: number;
+	leechers: number;
+	languages: { name: string }[];
+	approved: boolean;
+	rejected: boolean;
+	rejections: string[];
+	protocol: string;
+	age: number;
+}
 
 const TAG_COLORS: Record<string, string> = {
 	david: "#6366f1",
@@ -147,6 +171,19 @@ const formatRuntime = (minutes: number) => {
 	const m = minutes % 60;
 	return `${h}h ${m}m`;
 };
+
+const formatSize = (bytes: number) => {
+	if (!bytes) return "-";
+	const gb = bytes / (1024 * 1024 * 1024);
+	if (gb >= 1) return `${gb.toFixed(2)} GB`;
+	const mb = bytes / (1024 * 1024);
+	return `${mb.toFixed(0)} MB`;
+};
+
+const getReleaseQualityName = (release: Release) => release.quality?.quality?.name ?? "";
+
+const getReleaseLanguages = (release: Release) =>
+	release.languages?.map((language) => language.name).join(", ") ?? "";
 
 const normalizeMovie = (item: Partial<RadarrApiItem>): RadarrMovie => ({
 	tmdbId: item.tmdbId ?? 0,
@@ -318,6 +355,208 @@ function CollectionModal({
 	);
 }
 
+function ReleaseSearchModal({
+	movieTitle,
+	releases,
+	loading,
+	onClose,
+	onGrab,
+	grabbingGuid,
+}: {
+	movieTitle: string;
+	releases: Release[];
+	loading: boolean;
+	onClose: () => void;
+	onGrab: (release: Release) => void;
+	grabbingGuid: string | null;
+}) {
+	const [releaseSortKey, setReleaseSortKey] = useState<ReleaseSortKey>("age");
+	const [releaseSortDir, setReleaseSortDir] = useState<SortDir>("asc");
+
+	const sortedReleases = useMemo(() => {
+		const collator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
+		const result = [...releases];
+
+		result.sort((left, right) => {
+			let comparison = 0;
+
+			switch (releaseSortKey) {
+				case "title":
+					comparison = collator.compare(left.title, right.title);
+					break;
+				case "quality":
+					comparison = collator.compare(getReleaseQualityName(left), getReleaseQualityName(right));
+					break;
+				case "size":
+					comparison = left.size - right.size;
+					break;
+				case "indexer":
+					comparison = collator.compare(left.indexer, right.indexer);
+					break;
+				case "seeders":
+					comparison = left.seeders - right.seeders;
+					break;
+				case "leechers":
+					comparison = left.leechers - right.leechers;
+					break;
+				case "age":
+					comparison = left.age - right.age;
+					break;
+				case "languages":
+					comparison = collator.compare(getReleaseLanguages(left), getReleaseLanguages(right));
+					break;
+			}
+
+			if (comparison === 0) {
+				comparison = collator.compare(left.title, right.title);
+			}
+
+			return releaseSortDir === "asc" ? comparison : -comparison;
+		});
+
+		return result;
+	}, [releaseSortDir, releaseSortKey, releases]);
+
+	const toggleReleaseSort = (key: ReleaseSortKey) => {
+		if (releaseSortKey === key) {
+			setReleaseSortDir((current) => (current === "asc" ? "desc" : "asc"));
+			return;
+		}
+
+		setReleaseSortKey(key);
+		setReleaseSortDir(key === "age" ? "asc" : "desc");
+	};
+
+	const renderSortLabel = (key: ReleaseSortKey, label: string) => (
+		<>
+			<span>{label}</span>
+			<span className={`radarr-release-sort-indicator ${releaseSortKey === key ? "is-active" : ""}`}>
+				{releaseSortKey === key ? (releaseSortDir === "asc" ? "↑" : "↓") : <ArrowUpDown size={12} />}
+			</span>
+		</>
+	);
+
+	return (
+		<div className="radarr-modal-overlay" onClick={onClose}>
+			<div className="radarr-release-modal" onClick={(e) => e.stopPropagation()}>
+				<div className="radarr-release-modal-header">
+					<h2>
+						<Search size={18} /> Interactive Search – {movieTitle}
+					</h2>
+					<button className="radarr-modal-close" onClick={onClose}>
+						<X size={20} />
+					</button>
+				</div>
+				<div className="radarr-release-modal-body">
+					{loading ? (
+						<div className="radarr-release-loading">
+							<Loader2 size={24} className="radarr-spin" /> Searching releases...
+						</div>
+					) : releases.length === 0 ? (
+						<div className="radarr-release-empty">No releases found.</div>
+					) : (
+						<div className="radarr-release-table-wrapper">
+							<div className="radarr-release-summary">
+								<span>{sortedReleases.length} releases</span>
+								<span>
+									Sorted by {releaseSortKey} {releaseSortDir === "asc" ? "ascending" : "descending"}
+								</span>
+							</div>
+							<table className="radarr-release-table">
+								<thead>
+									<tr>
+										<th>
+											<button className="radarr-release-sort-button" onClick={() => toggleReleaseSort("title")}>
+												{renderSortLabel("title", "Title")}
+											</button>
+										</th>
+										<th>
+											<button className="radarr-release-sort-button" onClick={() => toggleReleaseSort("quality")}>
+												{renderSortLabel("quality", "Quality")}
+											</button>
+										</th>
+										<th>
+											<button className="radarr-release-sort-button" onClick={() => toggleReleaseSort("size")}>
+												{renderSortLabel("size", "Size")}
+											</button>
+										</th>
+										<th>
+											<button className="radarr-release-sort-button" onClick={() => toggleReleaseSort("indexer")}>
+												{renderSortLabel("indexer", "Indexer")}
+											</button>
+										</th>
+										<th>
+											<button className="radarr-release-sort-button" onClick={() => toggleReleaseSort("seeders")}>
+												{renderSortLabel("seeders", "Seeds")}
+											</button>
+										</th>
+										<th>
+											<button className="radarr-release-sort-button" onClick={() => toggleReleaseSort("leechers")}>
+												{renderSortLabel("leechers", "Peers")}
+											</button>
+										</th>
+										<th>
+											<button className="radarr-release-sort-button" onClick={() => toggleReleaseSort("age")}>
+												{renderSortLabel("age", "Age")}
+											</button>
+										</th>
+										<th>
+											<button className="radarr-release-sort-button" onClick={() => toggleReleaseSort("languages")}>
+												{renderSortLabel("languages", "Lang")}
+											</button>
+										</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									{sortedReleases.map((release) => (
+										<tr
+											key={release.guid}
+											className={release.rejected ? "radarr-release-rejected" : "radarr-release-approved"}
+										>
+											<td className="radarr-release-title-cell" title={release.title}>
+												{release.title}
+												{release.rejected && release.rejections?.length > 0 && (
+													<div className="radarr-release-rejections">
+														{release.rejections.map((r, i) => (
+															<span key={i}>{r}</span>
+														))}
+													</div>
+												)}
+											</td>
+											<td>{getReleaseQualityName(release) || "-"}</td>
+											<td>{formatSize(release.size)}</td>
+											<td>{release.indexer}</td>
+											<td>{release.protocol === "torrent" ? release.seeders : "-"}</td>
+											<td>{release.protocol === "torrent" ? release.leechers : "-"}</td>
+											<td>{release.age}d</td>
+											<td>{getReleaseLanguages(release) || "-"}</td>
+											<td>
+												<button
+													className="radarr-btn radarr-btn-grab"
+													disabled={grabbingGuid === release.guid}
+													onClick={() => onGrab(release)}
+													title="Grab release"
+												>
+													{grabbingGuid === release.guid ? (
+														<Loader2 size={14} className="radarr-spin" />
+													) : (
+														<Download size={14} />
+													)}
+												</button>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+					)}
+				</div>
+			</div>
+		</div>
+	);
+}
+
 const Radarr = () => {
 	const [collections, setCollections] = useState<RadarrCollection[]>([]);
 	const [tags, setTags] = useState<RadarrTag[]>([]);
@@ -336,6 +575,10 @@ const Radarr = () => {
 	const [editForm, setEditForm] = useState({ path: "", tags: [] as number[] });
 	const [moveFiles, setMoveFiles] = useState(false);
 	const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+	const [releaseSearchMovie, setReleaseSearchMovie] = useState<RadarrCollection | null>(null);
+	const [releases, setReleases] = useState<Release[]>([]);
+	const [releasesLoading, setReleasesLoading] = useState(false);
+	const [grabbingGuid, setGrabbingGuid] = useState<string | null>(null);
 
 	const getCollectionKey = (collection: RadarrCollection) => collection.id ?? collection.tmdbId;
 
@@ -597,6 +840,40 @@ const Radarr = () => {
 		}
 	};
 
+	const openReleaseSearch = async (collection: RadarrCollection) => {
+		if (collection.id == null) return;
+		setReleaseSearchMovie(collection);
+		setReleases([]);
+		setReleasesLoading(true);
+		try {
+			const res = await fetch(`/api/radarr/release?movieId=${collection.id}`);
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+			const data = await res.json();
+			setReleases(data as Release[]);
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Failed to search releases");
+		} finally {
+			setReleasesLoading(false);
+		}
+	};
+
+	const handleGrabRelease = async (release: Release) => {
+		setGrabbingGuid(release.guid);
+		try {
+			const res = await fetch("/api/radarr/release", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(release),
+			});
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+			setReleases((prev) => prev.filter((r) => r.guid !== release.guid));
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Failed to grab release");
+		} finally {
+			setGrabbingGuid(null);
+		}
+	};
+
 	if (loading) {
 		return (
 			<div className="radarr-page">
@@ -844,6 +1121,9 @@ const Radarr = () => {
 											</div>
 										) : null}
 										<div className="radarr-card-actions" onClick={(e) => e.stopPropagation()}>
+											<button className="radarr-btn radarr-btn-search" onClick={() => void openReleaseSearch(collection)} title="Interactive Search">
+												<Search size={14} />
+											</button>
 											<button className="radarr-btn radarr-btn-edit" onClick={() => startEdit(collection)}>
 												<Edit3 size={14} />
 											</button>
@@ -917,6 +1197,9 @@ const Radarr = () => {
 								))}
 							</div>
 							<div className="radarr-list-col radarr-list-col--actions" onClick={(e) => e.stopPropagation()}>
+								<button className="radarr-btn radarr-btn-search" onClick={() => void openReleaseSearch(collection)} title="Interactive Search">
+									<Search size={13} />
+								</button>
 								<button className="radarr-btn radarr-btn-edit" onClick={() => startEdit(collection)}>
 									<Edit3 size={13} />
 								</button>
@@ -938,6 +1221,17 @@ const Radarr = () => {
 					onDelete={handleDelete}
 					onEdit={startEdit}
 					tagMap={tagMap}
+				/>
+			)}
+
+			{releaseSearchMovie && (
+				<ReleaseSearchModal
+					movieTitle={releaseSearchMovie.title}
+					releases={releases}
+					loading={releasesLoading}
+					onClose={() => setReleaseSearchMovie(null)}
+					onGrab={handleGrabRelease}
+					grabbingGuid={grabbingGuid}
 				/>
 			)}
 		</div>
