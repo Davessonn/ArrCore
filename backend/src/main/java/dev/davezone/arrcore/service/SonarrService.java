@@ -2,6 +2,7 @@ package dev.davezone.arrcore.service;
 
 import dev.davezone.arrcore.dto.RootFolderDto;
 import dev.davezone.arrcore.dto.SonarrSeriesDto;
+import dev.davezone.arrcore.dto.TagDto;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -21,6 +22,7 @@ public class SonarrService {
     private static final String GET_SERIES_BY_ID_API_PATH = "api/v3/series/{id}";
     private static final String UPDATE_SERIES_API_PATH = "api/v3/series/{id}";
     private static final String GET_ROOT_FOLDERS_API_PATH = "api/v3/rootFolder";
+    private static final String GET_TAGS_API_PATH = "api/v3/tag";
 
     private final WebClient webClient;
     private final SettingsService settingsService;
@@ -107,6 +109,16 @@ public class SonarrService {
                         .retrieve()
                         .bodyToFlux(RootFolderDto.class)
                         .filter(folder -> folder.getPath() != null && !folder.getPath().isBlank())
+        );
+    }
+
+    public Flux<TagDto> getTags() {
+        return getCredentials().flatMapMany(creds ->
+                webClient.get()
+                        .uri(creds[0] + GET_TAGS_API_PATH)
+                        .header("X-Api-Key", creds[1])
+                        .retrieve()
+                        .bodyToFlux(TagDto.class)
         );
     }
 }

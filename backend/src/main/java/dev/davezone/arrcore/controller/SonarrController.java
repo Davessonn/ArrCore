@@ -2,6 +2,7 @@ package dev.davezone.arrcore.controller;
 
 import dev.davezone.arrcore.dto.RootFolderDto;
 import dev.davezone.arrcore.dto.SonarrSeriesDto;
+import dev.davezone.arrcore.dto.TagDto;
 import dev.davezone.arrcore.service.SonarrService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -47,5 +48,10 @@ public class SonarrController {
     @GetMapping("/rootFolders")
     public Flux<RootFolderDto> getRootFolders() {
         return sonarrService.getRootFolders();
+    }
+
+    @GetMapping("/tags")
+    public Flux<TagDto> getTags() {
+        return sonarrService.getTags();
     }
 }

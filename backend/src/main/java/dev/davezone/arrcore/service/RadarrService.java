@@ -2,6 +2,7 @@ package dev.davezone.arrcore.service;
 
 import dev.davezone.arrcore.dto.RadarrDTO;
 import dev.davezone.arrcore.dto.RootFolderDto;
+import dev.davezone.arrcore.dto.TagDto;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -14,6 +15,7 @@ public class RadarrService {
     private static final String ALL_MOVIES_API_PATH = "api/v3/movie";
     private static final String DELETE_MOVIE_API_PATH = "api/v3/movie/{id}?deleteFiles=true&addImportListExclusion=false";
     private static final String GET_ROOT_FOLDERS_API_PATH = "api/v3/rootFolder";
+    private static final String GET_TAGS_API_PATH = "api/v3/tag";
 
     private final WebClient webClient;
     private final SettingsService settingsService;
@@ -58,6 +60,16 @@ public class RadarrService {
                         .retrieve()
                         .bodyToFlux(RootFolderDto.class)
                         .filter(folder -> folder.getPath() != null && !folder.getPath().isBlank())
+        );
+    }
+
+    public Flux<TagDto> getTags() {
+        return getCredentials().flatMapMany(creds ->
+                webClient.get()
+                        .uri(creds[0] + GET_TAGS_API_PATH)
+                        .header("X-Api-Key", creds[1])
+                        .retrieve()
+                        .bodyToFlux(TagDto.class)
         );
     }
 }

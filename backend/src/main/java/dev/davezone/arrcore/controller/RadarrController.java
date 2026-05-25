@@ -2,6 +2,7 @@ package dev.davezone.arrcore.controller;
 
 import dev.davezone.arrcore.dto.RadarrDTO;
 import dev.davezone.arrcore.dto.RootFolderDto;
+import dev.davezone.arrcore.dto.TagDto;
 import dev.davezone.arrcore.service.RadarrService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -28,5 +29,10 @@ public class RadarrController {
     @GetMapping("/rootFolders")
     public Flux<RootFolderDto> getRootFolders() {
         return radarrService.getRootFolders();
+    }
+
+    @GetMapping("/tags")
+    public Flux<TagDto> getTags() {
+        return radarrService.getTags();
     }
 }
