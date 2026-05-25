@@ -29,10 +29,14 @@ public class RadarrDTO {
     private boolean searchOnAdd;
     @JsonProperty("minimumAvailability")
     private String minimumAvailability;
+    @JsonProperty("folder")
+    private String folder;
     @JsonProperty("movies")
     private List<RadarrMovieDTO> movies;
     @JsonProperty("missingMovies")
     private int missingMovies;
     @JsonProperty("tags")
     private List<Integer> tags;
+    @JsonProperty("path")
+    private String path;
 }

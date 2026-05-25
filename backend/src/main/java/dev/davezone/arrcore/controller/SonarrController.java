@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -41,8 +42,12 @@ public class SonarrController {
     }
 
     @PutMapping("/series/{id}")
-    public Mono<Map<String, Object>> updateSeries(@PathVariable Long id, @RequestBody Map<String, Object> series) {
-        return sonarrService.updateSeries(id, series);
+    public Mono<Map<String, Object>> updateSeries(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> series,
+            @RequestParam(defaultValue = "false") boolean moveFiles
+    ) {
+        return sonarrService.updateSeries(id, series, moveFiles);
     }
 
     @GetMapping("/rootFolders")

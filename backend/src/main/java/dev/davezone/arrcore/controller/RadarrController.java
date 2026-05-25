@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/radarr")
 @AllArgsConstructor
@@ -29,6 +31,15 @@ public class RadarrController {
     @GetMapping("/rootFolders")
     public Flux<RootFolderDto> getRootFolders() {
         return radarrService.getRootFolders();
+    }
+
+    @PutMapping("/movies/{id}")
+    public Mono<Map<String, Object>> updateMovie(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> movie,
+            @RequestParam(defaultValue = "false") boolean moveFiles
+    ) {
+        return radarrService.updateMovie(id, movie, moveFiles);
     }
 
     @GetMapping("/tags")

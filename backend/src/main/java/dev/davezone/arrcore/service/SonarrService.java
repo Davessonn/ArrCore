@@ -69,13 +69,14 @@ public class SonarrService {
         );
     }
 
-    public Mono<Map<String, Object>> updateSeries(Long id, Map<String, Object> patch) {
+    public Mono<Map<String, Object>> updateSeries(Long id, Map<String, Object> patch, boolean moveFiles) {
         return getCredentials().flatMap(creds ->
                 getSeriesMapById(id, creds).flatMap(existing -> {
                     existing.putAll(patch);
                     existing.put("id", id);
+                    String updateSeriesApiPath = creds[0] + UPDATE_SERIES_API_PATH + (moveFiles ? "?moveFiles=true" : "");
                     return webClient.put()
-                            .uri(creds[0] + UPDATE_SERIES_API_PATH, id)
+                            .uri(updateSeriesApiPath, id)
                             .header("X-Api-Key", creds[1])
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON)
