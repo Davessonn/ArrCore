@@ -48,6 +48,17 @@ interface Season {
   statistics: SeasonStats;
 }
 
+interface SonarrTag {
+  id: number;
+  label: string;
+}
+
+interface RootFolder {
+  id: number;
+  path: string;
+  freeSpace: number;
+}
+
 interface Series {
   id: number;
   title: string;
@@ -75,7 +86,6 @@ type SortKey = "title" | "year" | "rating" | "size" | "added" | "percent";
 type SortDir = "asc" | "desc";
 type ViewMode = "grid" | "list";
 
-const TAG_MAP: Record<number, string> = { 1: "david", 2: "luca", 3: "shared" };
 const TAG_COLORS: Record<string, string> = {
   david: "#6366f1",
   luca: "#f59e0b",
@@ -100,8 +110,19 @@ const getPoster = (images: SonarrImage[]) =>
 const getFanart = (images: SonarrImage[]) =>
   images.find((i) => i.coverType === "fanart")?.remoteUrl ?? "";
 
-const getTagNames = (tags: number[]) =>
-  tags.map((t) => TAG_MAP[t] ?? `tag-${t}`);
+const getPathParts = (path: string) => path.split(/[\\/]+/).filter(Boolean);
+
+const getLastPathPart = (path: string) => {
+  const parts = getPathParts(path);
+  return parts[parts.length - 1] ?? "";
+};
+
+const joinPath = (parentPath: string, childPath: string) => {
+  const separator = parentPath.includes("\\") && !parentPath.includes("/") ? "\\" : "/";
+  return `${parentPath.replace(/[\\/]+$/, "")}${separator}${childPath}`;
+};
+
+
 
 function StatCard({
   icon: Icon,
@@ -132,16 +153,18 @@ function SeriesModal({
   onClose,
   onDelete,
   onEdit,
+  tagMap,
 }: {
   series: Series;
   onClose: () => void;
   onDelete: (id: number) => void;
   onEdit: (s: Series) => void;
+  tagMap: Record<number, string>;
 }) {
   const fanart = getFanart(s.images);
   const poster = getPoster(s.images);
   const user = getUser(s.rootFolderPath);
-  const tags = getTagNames(s.tags);
+  const tags = s.tags.map((t) => tagMap[t] ?? `tag-${t}`);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -316,6 +339,8 @@ function SeriesModal({
 
 const Sonarr = () => {
   const [series, setSeries] = useState<Series[]>([]);
+  const [tags, setTags] = useState<SonarrTag[]>([]);
+  const [rootFolders, setRootFolders] = useState<RootFolder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -329,22 +354,43 @@ const Sonarr = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", path: "", overview: "" });
+  const [editForm, setEditForm] = useState({ path: "", tags: [] as number[] });
+  const [moveFiles, setMoveFiles] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  const tagMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    tags.forEach((t) => { map[t.id] = t.label; });
+    return map;
+  }, [tags]);
+
+  const getTagNames = (tagIds: number[]) =>
+    tagIds.map((t) => tagMap[t] ?? `tag-${t}`);
 
   const loadSeries = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/sonarr/series");
+      const [seriesRes, tagsRes, rootFoldersRes] = await Promise.all([
+        fetch("/api/sonarr/series"),
+        fetch("/api/sonarr/tags"),
+        fetch("/api/sonarr/rootFolders"),
+      ]);
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      if (!seriesRes.ok) throw new Error(`HTTP ${seriesRes.status}`);
+      if (!tagsRes.ok) throw new Error(`Tags: HTTP ${tagsRes.status}`);
+      if (!rootFoldersRes.ok) throw new Error(`Root folders: HTTP ${rootFoldersRes.status}`);
 
-      const data: Series[] = await response.json();
-      setSeries(data);
+      const [seriesData, tagsData, rootFoldersData] = await Promise.all([
+        seriesRes.json() as Promise<Series[]>,
+        tagsRes.json() as Promise<SonarrTag[]>,
+        rootFoldersRes.json() as Promise<RootFolder[]>,
+      ]);
+
+      setSeries(seriesData);
+      setTags(tagsData);
+      setRootFolders(rootFoldersData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load series");
     } finally {
@@ -511,21 +557,36 @@ const Sonarr = () => {
 
   const startEdit = (s: Series) => {
     setEditingId(s.id);
-    setEditForm({ title: s.title, path: s.path, overview: s.overview });
+    setEditForm({ path: s.rootFolderPath, tags: [...s.tags] });
+    setMoveFiles(false);
   };
 
   const cancelEdit = () => setEditingId(null);
 
-  const saveEdit = async (id: number) => {
+  const saveEdit = async (s: Series) => {
     setError(null);
 
     try {
-      const response = await fetch(`/api/sonarr/series/${id}`, {
+      const folderName = getLastPathPart(s.path);
+
+      if (!folderName) {
+        throw new Error("Failed to determine series folder name");
+      }
+
+      const payload = {
+        ...editForm,
+        path: joinPath(editForm.path, folderName),
+        rootFolderPath: editForm.path,
+      };
+      const url = moveFiles
+        ? `/api/sonarr/series/${s.id}?moveFiles=true`
+        : `/api/sonarr/series/${s.id}`;
+      const response = await fetch(url, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -709,29 +770,47 @@ const Sonarr = () => {
               {editingId === s.id ? (
                 <div className="sonarr-card-edit">
                   <label>
-                    <span>Title</span>
-                    <input
-                      value={editForm.title}
-                      onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                    />
-                  </label>
-                  <label>
                     <span>Path</span>
-                    <input
+                    <select
                       value={editForm.path}
                       onChange={(e) => setEditForm({ ...editForm, path: e.target.value })}
-                    />
+                    >
+                      {rootFolders.map((rf) => (
+                        <option key={rf.id} value={rf.path}>
+                          {rf.path}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                   <label>
-                    <span>Overview</span>
-                    <textarea
-                      rows={3}
-                      value={editForm.overview}
-                      onChange={(e) => setEditForm({ ...editForm, overview: e.target.value })}
+                    <span>Tags</span>
+                    <select
+                      value={editForm.tags[0]?.toString() ?? ""}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          tags: e.target.value ? [Number(e.target.value)] : [],
+                        })
+                      }
+                    >
+                      <option value="">No tag</option>
+                      {tags.map((tag) => (
+                        <option key={tag.id} value={tag.id}>
+                          {tag.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="sonarr-edit-move-files">
+                    <input
+                      type="checkbox"
+                      checked={moveFiles}
+                      onChange={(e) => setMoveFiles(e.target.checked)}
                     />
+                    <span>Move files to new path</span>
                   </label>
                   <div className="sonarr-edit-actions">
-                    <button className="sonarr-btn sonarr-btn-save" onClick={() => saveEdit(s.id)}>
+                    <button className="sonarr-btn sonarr-btn-save" onClick={() => saveEdit(s)}>
                       <Check size={14} /> Save
                     </button>
                     <button className="sonarr-btn sonarr-btn-cancel" onClick={cancelEdit}>
@@ -916,6 +995,7 @@ const Sonarr = () => {
           onClose={() => setSelectedSeries(null)}
           onDelete={handleDelete}
           onEdit={startEdit}
+          tagMap={tagMap}
         />
       )}
     </div>

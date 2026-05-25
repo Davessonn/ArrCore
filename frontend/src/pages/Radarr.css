@@ -548,7 +548,8 @@
 }
 
 .radarr-card-edit input,
-.radarr-card-edit textarea {
+.radarr-card-edit textarea,
+.radarr-card-edit select {
   background: var(--color-bg-secondary);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
@@ -561,7 +562,8 @@
 }
 
 .radarr-card-edit input:focus,
-.radarr-card-edit textarea:focus {
+.radarr-card-edit textarea:focus,
+.radarr-card-edit select:focus {
   border-color: var(--color-border-focus);
 }
 
@@ -569,6 +571,29 @@
   display: flex;
   gap: 0.5rem;
   margin-top: 0.25rem;
+}
+
+.radarr-edit-move-files {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  cursor: pointer;
+}
+
+.radarr-edit-move-files input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.radarr-edit-move-files span {
+  font-size: 0.8rem !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  color: var(--color-text-secondary) !important;
 }
 
 .radarr-empty {

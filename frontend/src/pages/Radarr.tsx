@@ -65,11 +65,24 @@ interface RadarrCollection {
 	overview: string;
 	monitored: boolean;
 	rootFolderPath: string;
+	folder?: string;
 	qualityProfileId: number;
 	searchOnAdd: boolean;
 	minimumAvailability: string;
 	movies: RadarrMovie[];
 	tags: number[];
+	path: string;
+}
+
+interface RadarrTag {
+	id: number;
+	label: string;
+}
+
+interface RootFolder {
+	id: number;
+	path: string;
+	freeSpace: number;
 }
 
 interface RadarrApiItem extends Omit<RadarrCollection, "movies" | "images" | "tags"> {
@@ -92,7 +105,6 @@ type SortKey = "title" | "movies" | "rating" | "year";
 type SortDir = "asc" | "desc";
 type ViewMode = "grid" | "list";
 
-const TAG_MAP: Record<number, string> = { 1: "david", 2: "luca", 3: "shared" };
 const TAG_COLORS: Record<string, string> = {
 	david: "#6366f1",
 	luca: "#f59e0b",
@@ -114,8 +126,8 @@ const getFanart = (images: RadarrImage[]) =>
 	images.find((i) => i.coverType === "fanart")?.url ??
 	"";
 
-const getTagNames = (tags: number[]) =>
-	tags.map((t) => TAG_MAP[t] ?? `tag-${t}`);
+const getTagNames = (tags: number[], tagMap: Record<number, string>) =>
+	tags.map((t) => tagMap[t] ?? `tag-${t}`);
 
 const getMovieRating = (movie: RadarrMovie) =>
 	movie.ratings.tmdb?.value ?? movie.ratings.imdb?.value ?? movie.ratings.trakt?.value ?? 0;
@@ -166,11 +178,13 @@ const normalizeCollection = (item: RadarrApiItem): RadarrCollection => {
 		overview: item.overview ?? "",
 		monitored: Boolean(item.monitored),
 		rootFolderPath: item.rootFolderPath ?? "",
+		folder: item.folder,
 		qualityProfileId: item.qualityProfileId ?? 0,
 		searchOnAdd: Boolean(item.searchOnAdd),
 		minimumAvailability: item.minimumAvailability ?? "unknown",
 		movies,
 		tags: item.tags ?? [],
+		path: item.path ?? "",
 	};
 };
 
@@ -203,16 +217,18 @@ function CollectionModal({
 	onClose,
 	onDelete,
 	onEdit,
+	tagMap,
 }: {
 	collection: RadarrCollection;
 	onClose: () => void;
 	onDelete: (collection: RadarrCollection) => void;
 	onEdit: (collection: RadarrCollection) => void;
+	tagMap: Record<number, string>;
 }) {
 	const poster = getPoster(collection.images);
 	const fanart = getFanart(collection.images);
 	const user = getUser(collection.rootFolderPath);
-	const tags = getTagNames(collection.tags ?? []);
+	const tags = getTagNames(collection.tags ?? [], tagMap);
 
 	return (
 		<div className="radarr-modal-overlay" onClick={onClose}>
@@ -304,6 +320,8 @@ function CollectionModal({
 
 const Radarr = () => {
 	const [collections, setCollections] = useState<RadarrCollection[]>([]);
+	const [tags, setTags] = useState<RadarrTag[]>([]);
+	const [rootFolders, setRootFolders] = useState<RootFolder[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [search, setSearch] = useState("");
@@ -315,21 +333,50 @@ const Radarr = () => {
 	const [viewMode, setViewMode] = useState<ViewMode>("grid");
 	const [selectedCollection, setSelectedCollection] = useState<RadarrCollection | null>(null);
 	const [editingId, setEditingId] = useState<number | null>(null);
-	const [editForm, setEditForm] = useState({ title: "", rootFolderPath: "", overview: "" });
+	const [editForm, setEditForm] = useState({ path: "", tags: [] as number[] });
+	const [moveFiles, setMoveFiles] = useState(false);
 	const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
 	const getCollectionKey = (collection: RadarrCollection) => collection.id ?? collection.tmdbId;
 
+	const tagMap = useMemo(() => {
+		const map: Record<number, string> = {};
+		tags.forEach((tag) => {
+			map[tag.id] = tag.label;
+		});
+		return map;
+	}, [tags]);
+
 	const loadCollections = async () => {
+		setLoading(true);
+		setError(null);
+
 		try {
-			const res = await fetch("/api/radarr/movies");
-			if (!res.ok) {
-				throw new Error(`HTTP ${res.status}`);
+			const [moviesRes, tagsRes, rootFoldersRes] = await Promise.all([
+				fetch("/api/radarr/movies"),
+				fetch("/api/radarr/tags"),
+				fetch("/api/radarr/rootFolders"),
+			]);
+
+			if (!moviesRes.ok) {
+				throw new Error(`HTTP ${moviesRes.status}`);
+			}
+			if (!tagsRes.ok) {
+				throw new Error(`Tags: HTTP ${tagsRes.status}`);
+			}
+			if (!rootFoldersRes.ok) {
+				throw new Error(`Root folders: HTTP ${rootFoldersRes.status}`);
 			}
 
-			const data: RadarrApiItem[] = await res.json();
-			setCollections(Array.isArray(data) ? data.map(normalizeCollection) : []);
-			setError(null);
+			const [moviesData, tagsData, rootFoldersData] = await Promise.all([
+				moviesRes.json() as Promise<RadarrApiItem[]>,
+				tagsRes.json() as Promise<RadarrTag[]>,
+				rootFoldersRes.json() as Promise<RootFolder[]>,
+			]);
+
+			setCollections(Array.isArray(moviesData) ? moviesData.map(normalizeCollection) : []);
+			setTags(tagsData);
+			setRootFolders(rootFoldersData);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Failed to load collections");
 		} finally {
@@ -342,15 +389,14 @@ const Radarr = () => {
 	}, []);
 
 	const users = useMemo(() => {
-		const set = new Set(collections.map((c) => getUser(c.rootFolderPath)));
+		const set = new Set(rootFolders.map((folder) => getUser(folder.path)));
 		return Array.from(set).sort();
-	}, [collections]);
+	}, [rootFolders]);
 
-	const allTags = useMemo(() => {
-		const set = new Set<string>();
-		collections.forEach((c) => getTagNames(c.tags ?? []).forEach((t) => set.add(t)));
-		return Array.from(set).sort();
-	}, [collections]);
+	const availableTags = useMemo(
+		() => [...tags].sort((a, b) => a.label.localeCompare(b.label)),
+		[tags]
+	);
 
 	const filtered = useMemo(() => {
 		const result = collections.filter((c) => {
@@ -363,7 +409,7 @@ const Radarr = () => {
 				statusFilter === "all" ||
 				(statusFilter === "monitored" ? c.monitored : !c.monitored);
 			const matchUser = userFilter === "all" || getUser(c.rootFolderPath) === userFilter;
-			const matchTag = tagFilter === "all" || getTagNames(c.tags ?? []).includes(tagFilter);
+			const matchTag = tagFilter === "all" || c.tags?.includes(Number(tagFilter));
 			return matchSearch && matchStatus && matchUser && matchTag;
 		});
 
@@ -497,24 +543,49 @@ const Radarr = () => {
 
 	const startEdit = (collection: RadarrCollection) => {
 		setEditingId(collection.tmdbId);
-		setEditForm({
-			title: collection.title,
-			rootFolderPath: collection.rootFolderPath,
-			overview: collection.overview,
-		});
+		setEditForm({ path: collection.rootFolderPath, tags: [...(collection.tags ?? [])] });
+		setMoveFiles(false);
 	};
 
-	const cancelEdit = () => setEditingId(null);
-
-	const saveEdit = (id: number) => {
-		setCollections((prev) =>
-			prev.map((c) =>
-				c.tmdbId === id
-					? { ...c, title: editForm.title, rootFolderPath: editForm.rootFolderPath, overview: editForm.overview }
-					: c
-			)
-		);
+	const cancelEdit = () => {
 		setEditingId(null);
+		setMoveFiles(false);
+	};
+
+	const saveEdit = async (collection: RadarrCollection) => {
+		if (collection.id == null) {
+			setError("Failed to update collection: missing Radarr id.");
+			return;
+		}
+
+		setError(null);
+
+		try {
+			const payload = {
+				rootFolderPath: editForm.path,
+				tags: editForm.tags,
+			};
+			const url = moveFiles
+				? `/api/radarr/movies/${collection.id}?moveFiles=true`
+				: `/api/radarr/movies/${collection.id}`;
+			const response = await fetch(url, {
+				method: "PUT",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(payload),
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`);
+			}
+
+			setEditingId(null);
+			setMoveFiles(false);
+			await loadCollections();
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Failed to update collection");
+		}
 	};
 
 	const toggleSort = (key: SortKey) => {
@@ -615,9 +686,9 @@ const Radarr = () => {
 							className="radarr-select"
 						>
 							<option value="all">All tags</option>
-							{allTags.map((t) => (
-								<option key={t} value={t}>
-									{t}
+							{availableTags.map((tag) => (
+								<option key={tag.id} value={tag.id.toString()}>
+									{tag.label}
 								</option>
 							))}
 						</select>
@@ -671,29 +742,47 @@ const Radarr = () => {
 							{editingId === collection.tmdbId ? (
 								<div className="radarr-card-edit">
 									<label>
-										<span>Title</span>
-										<input
-											value={editForm.title}
-											onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-										/>
+										<span>Path</span>
+										<select
+											value={editForm.path}
+											onChange={(e) => setEditForm({ ...editForm, path: e.target.value })}
+										>
+											{rootFolders.map((rootFolder) => (
+												<option key={rootFolder.id} value={rootFolder.path}>
+													{rootFolder.path}
+												</option>
+											))}
+										</select>
 									</label>
 									<label>
-										<span>Root path</span>
-										<input
-											value={editForm.rootFolderPath}
-											onChange={(e) => setEditForm({ ...editForm, rootFolderPath: e.target.value })}
-										/>
+										<span>Tags</span>
+										<select
+											value={editForm.tags[0]?.toString() ?? ""}
+											onChange={(e) =>
+												setEditForm({
+													...editForm,
+													tags: e.target.value ? [Number(e.target.value)] : [],
+												})
+											}
+										>
+											<option value="">No tag</option>
+											{tags.map((tag) => (
+												<option key={tag.id} value={tag.id}>
+													{tag.label}
+												</option>
+											))}
+										</select>
 									</label>
-									<label>
-										<span>Overview</span>
-										<textarea
-											rows={3}
-											value={editForm.overview}
-											onChange={(e) => setEditForm({ ...editForm, overview: e.target.value })}
+									<label className="radarr-edit-move-files">
+										<input
+											type="checkbox"
+											checked={moveFiles}
+											onChange={(e) => setMoveFiles(e.target.checked)}
 										/>
+										<span>Move files to new path</span>
 									</label>
 									<div className="radarr-edit-actions">
-										<button className="radarr-btn radarr-btn-save" onClick={() => saveEdit(collection.tmdbId)}>
+										<button className="radarr-btn radarr-btn-save" onClick={() => void saveEdit(collection)}>
 											<Check size={14} /> Save
 										</button>
 										<button className="radarr-btn radarr-btn-cancel" onClick={cancelEdit}>
@@ -740,7 +829,7 @@ const Radarr = () => {
 										</div>
 										{collection.tags?.length ? (
 											<div className="radarr-card-tags">
-												{getTagNames(collection.tags).map((tag) => (
+												{getTagNames(collection.tags, tagMap).map((tag) => (
 													<span
 														key={tag}
 														className="radarr-tag"
@@ -817,7 +906,7 @@ const Radarr = () => {
 								{getUser(collection.rootFolderPath)}
 							</div>
 							<div className="radarr-list-col radarr-list-col--tags">
-								{getTagNames(collection.tags ?? []).map((tag) => (
+								{getTagNames(collection.tags ?? [], tagMap).map((tag) => (
 									<span
 										key={tag}
 										className="radarr-tag-sm"
@@ -848,6 +937,7 @@ const Radarr = () => {
 					onClose={() => setSelectedCollection(null)}
 					onDelete={handleDelete}
 					onEdit={startEdit}
+					tagMap={tagMap}
 				/>
 			)}
 		</div>

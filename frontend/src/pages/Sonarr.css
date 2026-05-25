@@ -565,7 +565,8 @@
 }
 
 .sonarr-card-edit input,
-.sonarr-card-edit textarea {
+.sonarr-card-edit textarea,
+.sonarr-card-edit select {
   background: var(--color-bg-input);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
@@ -578,7 +579,8 @@
 }
 
 .sonarr-card-edit input:focus,
-.sonarr-card-edit textarea:focus {
+.sonarr-card-edit textarea:focus,
+.sonarr-card-edit select:focus {
   border-color: var(--color-border-focus);
 }
 
@@ -586,6 +588,56 @@
   display: flex;
   gap: 0.5rem;
   margin-top: 0.25rem;
+}
+
+.sonarr-edit-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sonarr-edit-tag-option {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.sonarr-edit-tag-option input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.sonarr-edit-tag-option span {
+  font-size: 0.8rem !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+}
+
+.sonarr-edit-move-files {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  cursor: pointer;
+}
+
+.sonarr-edit-move-files input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.sonarr-edit-move-files span {
+  font-size: 0.8rem !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  color: var(--color-text-secondary) !important;
 }
 
 .sonarr-empty {
