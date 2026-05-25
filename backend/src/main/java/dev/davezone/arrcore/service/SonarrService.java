@@ -23,6 +23,8 @@ public class SonarrService {
     private static final String UPDATE_SERIES_API_PATH = "api/v3/series/{id}";
     private static final String GET_ROOT_FOLDERS_API_PATH = "api/v3/rootFolder";
     private static final String GET_TAGS_API_PATH = "api/v3/tag";
+    private static final String RELEASE_API_PATH = "api/v3/release";
+    private static final String SEARCH_RELEASES_API_PATH = "api/v3/release?seriesId={seriesId}&seasonNumber={seasonNumber}";
 
     private final WebClient webClient;
     private final SettingsService settingsService;
@@ -122,4 +124,34 @@ public class SonarrService {
                         .bodyToFlux(TagDto.class)
         );
     }
+
+        public Flux<Map<String, Object>> searchReleases(Long seriesId, Integer seasonNumber) {
+        return getCredentials().flatMapMany(creds ->
+            webClient.get()
+                .uri(creds[0] + SEARCH_RELEASES_API_PATH, seriesId, seasonNumber)
+                .header("X-Api-Key", creds[1])
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
+        );
+        }
+
+        public Mono<Map<String, Object>> grabRelease(Map<String, Object> releasePayload) {
+        return getCredentials().flatMap(creds ->
+            webClient.post()
+                .uri(creds[0] + RELEASE_API_PATH)
+                .header("X-Api-Key", creds[1])
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(releasePayload)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response ->
+                    response.bodyToMono(String.class)
+                        .flatMap(body -> Mono.error(new IllegalStateException(
+                            "Sonarr grab failed: " + response.statusCode() + " body: " + body
+                        )))
+                )
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+        );
+        }
 }

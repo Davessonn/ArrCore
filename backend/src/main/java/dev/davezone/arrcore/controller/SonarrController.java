@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -58,5 +60,18 @@ public class SonarrController {
     @GetMapping("/tags")
     public Flux<TagDto> getTags() {
         return sonarrService.getTags();
+    }
+
+    @GetMapping("/release")
+    public Mono<List<Map<String, Object>>> searchReleases(
+            @RequestParam Long seriesId,
+            @RequestParam Integer seasonNumber
+    ) {
+        return sonarrService.searchReleases(seriesId, seasonNumber).collectList();
+    }
+
+    @PostMapping("/release")
+    public Mono<Map<String, Object>> grabRelease(@RequestBody Map<String, Object> releasePayload) {
+        return sonarrService.grabRelease(releasePayload);
     }
 }

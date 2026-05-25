@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -45,5 +46,15 @@ public class RadarrController {
     @GetMapping("/tags")
     public Flux<TagDto> getTags() {
         return radarrService.getTags();
+    }
+
+    @GetMapping("/release")
+    public Mono<List<Map<String, Object>>> searchReleases(@RequestParam Long movieId) {
+        return radarrService.searchReleases(movieId).collectList();
+    }
+
+    @PostMapping("/release")
+    public Mono<Map<String, Object>> grabRelease(@RequestBody Map<String, Object> releasePayload) {
+        return radarrService.grabRelease(releasePayload);
     }
 }

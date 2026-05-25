@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -23,6 +24,9 @@ public class RadarrService {
     private static final String GET_ROOT_FOLDERS_API_PATH = "api/v3/rootFolder";
     private static final String GET_TAGS_API_PATH = "api/v3/tag";
     private static final String GET_MOVIE_BY_ID_API_PATH = "api/v3/movie/{id}";
+    private static final String GET_INDEXERS_API_PATH = "api/v3/indexer";
+    private static final String RELEASE_API_PATH = "api/v3/release";
+    private static final String RELEASE_SEARCH_API_PATH = "api/v3/release?movieId={id}";
 
     private final WebClient webClient;
     private final SettingsService settingsService;
@@ -151,5 +155,107 @@ public class RadarrService {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {});
+    }
+
+    public Flux<Map<String, Object>> searchReleases(Long movieId) {
+        return getCredentials().flatMapMany(creds ->
+                getIndexerIdsByName(creds).flatMapMany(indexerIdsByName ->
+                        webClient.get()
+                                .uri(creds[0] + RELEASE_SEARCH_API_PATH, movieId)
+                                .header("X-Api-Key", creds[1])
+                                .accept(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
+                                .map(release -> withResolvedIndexerId(release, indexerIdsByName))
+                )
+        );
+    }
+
+    public Mono<Map<String, Object>> grabRelease(Map<String, Object> releasePayload) {
+        return getCredentials().flatMap(creds ->
+                resolveReleasePayload(releasePayload, creds).flatMap(resolvedPayload ->
+                        webClient.post()
+                                .uri(creds[0] + RELEASE_API_PATH)
+                                .header("X-Api-Key", creds[1])
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .bodyValue(resolvedPayload)
+                                .retrieve()
+                                .onStatus(HttpStatusCode::isError, response ->
+                                        response.bodyToMono(String.class)
+                                                .flatMap(body -> Mono.error(new IllegalStateException(
+                                                        "Radarr grab failed: " + response.statusCode() + " body: " + body
+                                                )))
+                                )
+                                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                )
+        );
+    }
+
+    private Mono<Map<String, Long>> getIndexerIdsByName(String[] creds) {
+        return webClient.get()
+                .uri(creds[0] + GET_INDEXERS_API_PATH)
+                .header("X-Api-Key", creds[1])
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .collect(HashMap<String, Long>::new, (indexerIdsByName, indexer) -> {
+                    String indexerName = getStringValue(indexer.get("name"));
+                    long indexerId = getLongValue(indexer.get("id"));
+                    if (!indexerName.isBlank() && indexerId > 0) {
+                        indexerIdsByName.put(indexerName, indexerId);
+                    }
+                });
+    }
+
+    private Mono<Map<String, Object>> resolveReleasePayload(Map<String, Object> releasePayload, String[] creds) {
+        long indexerId = getLongValue(releasePayload.get("indexerId"));
+        if (indexerId > 0) {
+            return Mono.just(releasePayload);
+        }
+
+        return getIndexerIdsByName(creds).map(indexerIdsByName -> {
+            Map<String, Object> resolvedPayload = withResolvedIndexerId(releasePayload, indexerIdsByName);
+            long resolvedIndexerId = getLongValue(resolvedPayload.get("indexerId"));
+            if (resolvedIndexerId <= 0) {
+                throw new IllegalStateException("Radarr grab failed: could not resolve indexerId for release '"
+                        + getStringValue(releasePayload.get("title")) + "'");
+            }
+            return resolvedPayload;
+        });
+    }
+
+    private Map<String, Object> withResolvedIndexerId(
+            Map<String, Object> release,
+            Map<String, Long> indexerIdsByName
+    ) {
+        long currentIndexerId = getLongValue(release.get("indexerId"));
+        if (currentIndexerId > 0) {
+            return release;
+        }
+
+        String indexerName = getStringValue(release.get("indexer"));
+        Long resolvedIndexerId = indexerIdsByName.get(indexerName);
+        if (resolvedIndexerId == null || resolvedIndexerId <= 0) {
+            return release;
+        }
+
+        Map<String, Object> resolvedRelease = new HashMap<>(release);
+        resolvedRelease.put("indexerId", resolvedIndexerId);
+        return resolvedRelease;
+    }
+
+    private long getLongValue(Object value) {
+        if (value instanceof Number numberValue) {
+            return numberValue.longValue();
+        }
+        if (value instanceof String stringValue) {
+            try {
+                return Long.parseLong(stringValue);
+            } catch (NumberFormatException ignored) {
+                return 0L;
+            }
+        }
+        return 0L;
     }
 }
