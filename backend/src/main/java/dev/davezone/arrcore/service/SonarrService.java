@@ -1,5 +1,6 @@
 package dev.davezone.arrcore.service;
 
+import dev.davezone.arrcore.dto.RootFolderDto;
 import dev.davezone.arrcore.dto.SonarrSeriesDto;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
@@ -19,6 +20,7 @@ public class SonarrService {
     private static final String DELETE_SERIES_API_PATH = "api/v3/series/{id}?deleteFiles=true&addImportListExclusion=false";
     private static final String GET_SERIES_BY_ID_API_PATH = "api/v3/series/{id}";
     private static final String UPDATE_SERIES_API_PATH = "api/v3/series/{id}";
+    private static final String GET_ROOT_FOLDERS_API_PATH = "api/v3/rootFolder";
 
     private final WebClient webClient;
     private final SettingsService settingsService;
@@ -95,5 +97,16 @@ public class SonarrService {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {});
+    }
+
+    public Flux<RootFolderDto> getRootFolders() {
+        return getCredentials().flatMapMany(creds ->
+                webClient.get()
+                        .uri(creds[0] + GET_ROOT_FOLDERS_API_PATH)
+                        .header("X-Api-Key", creds[1])
+                        .retrieve()
+                        .bodyToFlux(RootFolderDto.class)
+                        .filter(folder -> folder.getPath() != null && !folder.getPath().isBlank())
+        );
     }
 }

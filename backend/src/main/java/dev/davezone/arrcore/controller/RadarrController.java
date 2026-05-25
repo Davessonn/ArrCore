@@ -1,6 +1,7 @@
 package dev.davezone.arrcore.controller;
 
 import dev.davezone.arrcore.dto.RadarrDTO;
+import dev.davezone.arrcore.dto.RootFolderDto;
 import dev.davezone.arrcore.service.RadarrService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -22,5 +23,10 @@ public class RadarrController {
     @DeleteMapping("/movies/{id}")
     public Mono<Void> deleteMovie(@PathVariable Long id) {
         return radarrService.deleteMovie(id);
+    }
+
+    @GetMapping("/rootFolders")
+    public Flux<RootFolderDto> getRootFolders() {
+        return radarrService.getRootFolders();
     }
 }

@@ -1,5 +1,6 @@
 package dev.davezone.arrcore.controller;
 
+import dev.davezone.arrcore.dto.RootFolderDto;
 import dev.davezone.arrcore.dto.SonarrSeriesDto;
 import dev.davezone.arrcore.service.SonarrService;
 import lombok.AllArgsConstructor;
@@ -41,5 +42,10 @@ public class SonarrController {
     @PutMapping("/series/{id}")
     public Mono<Map<String, Object>> updateSeries(@PathVariable Long id, @RequestBody Map<String, Object> series) {
         return sonarrService.updateSeries(id, series);
+    }
+
+    @GetMapping("/rootFolders")
+    public Flux<RootFolderDto> getRootFolders() {
+        return sonarrService.getRootFolders();
     }
 }
