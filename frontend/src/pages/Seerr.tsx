@@ -523,7 +523,6 @@ export default function Seerr() {
                 className={`seerr-user-btn ${selectedUser === u.id ? "active" : ""}`}
                 onClick={() => setSelectedUser(u.id)}
               >
-                {u.avatar && <img src={u.avatar} alt="" style={{ width: 18, height: 18, borderRadius: "50%" }} />}
                 {u.displayName} ({u.requestCount})
               </button>
             ))}
@@ -565,12 +564,7 @@ export default function Seerr() {
                         <span className={`seerr-req-status seerr-req-status-${st.cls}`}>{st.label}</span>
                       </td>
                       <td>
-                        <div className="seerr-req-user">
-                          {req.requestedBy?.avatar && (
-                            <img src={req.requestedBy.avatar} alt="" className="seerr-req-avatar" />
-                          )}
-                          <span className="seerr-req-username">{req.requestedBy?.displayName ?? "Unknown"}</span>
-                        </div>
+                        <span className="seerr-req-username">{req.requestedBy?.displayName ?? "Unknown"}</span>
                       </td>
                       <td>{formatDate(req.createdAt)}</td>
                     </tr>
@@ -694,9 +688,7 @@ export default function Seerr() {
                 >
                   {users.length === 0 && <option value="">No users available</option>}
                   {users.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.displayName}
-                    </option>
+                    <option key={u.id} value={u.id}>{u.displayName}</option>
                   ))}
                 </select>
               </div>
