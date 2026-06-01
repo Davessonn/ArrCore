@@ -535,6 +535,38 @@
   margin-bottom: 1.5rem;
 }
 
+.seerr-modal-field {
+  margin-bottom: 1.25rem;
+}
+
+.seerr-modal-field-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.seerr-modal-select {
+  width: 100%;
+  background: var(--color-bg-input);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.75rem;
+  color: var(--color-text-primary);
+  font-size: 0.86rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: all var(--transition-fast);
+}
+
+.seerr-modal-select:focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
 .seerr-modal-actions {
   display: flex;
   gap: 0.75rem;
@@ -611,5 +643,38 @@
   accent-color: var(--color-accent);
   width: 15px;
   height: 15px;
+}
+
+/* Tags selection in modal */
+.seerr-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.seerr-tag-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.82rem;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.seerr-tag-item:hover {
+  border-color: var(--color-accent);
+  background: var(--color-bg-card);
+}
+
+.seerr-tag-item input[type="checkbox"] {
+  accent-color: var(--color-accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
 }
 

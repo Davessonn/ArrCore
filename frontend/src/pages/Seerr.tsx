@@ -87,6 +87,16 @@ interface MovieDetails {
   posterPath?: string;
 }
 
+interface ServiceProfile { id: number; name: string; }
+interface ServiceRootFolder { id: number; freeSpace: number; path: string; }
+interface ServiceTag { id: number; label: string; }
+interface ServiceInfo {
+  server: { id: number; name: string; activeProfileId: number; activeDirectory: string; activeTags: number[] };
+  profiles: ServiceProfile[];
+  rootFolders: ServiceRootFolder[];
+  tags: ServiceTag[];
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const TMDB_IMG = "https://image.tmdb.org/t/p/w300";
@@ -130,6 +140,12 @@ function slugToTitle(slug?: string): string | undefined {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1e12) return `${(bytes / 1e12).toFixed(1)} TB`;
+  if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`;
+  return `${(bytes / 1e6).toFixed(1)} MB`;
 }
 
 function normalizeRequest(raw: any): SeerrRequest {
@@ -236,7 +252,12 @@ export default function Seerr() {
   const [modalItem, setModalItem] = useState<SearchResult | null>(null);
   const [tvDetails, setTvDetails] = useState<TvDetails | null>(null);
   const [selectedSeasons, setSelectedSeasons] = useState<number[]>([]);
+  const [requestUserId, setRequestUserId] = useState<number | null>(null);
   const [requesting, setRequesting] = useState(false);
+  const [serviceInfo, setServiceInfo] = useState<ServiceInfo | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
+  const [selectedRootFolder, setSelectedRootFolder] = useState<string>("");
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
   // ─── Data Fetching ───────────────────────────────────────────────────────
 
@@ -306,20 +327,39 @@ export default function Seerr() {
     setModalItem(item);
     setSelectedSeasons([]);
     setTvDetails(null);
+    setServiceInfo(null);
+    setSelectedProfileId(null);
+    setSelectedRootFolder("");
+    setSelectedTagIds([]);
+    setRequestUserId(
+      selectedUser !== null && users.some((u) => u.id === selectedUser)
+        ? selectedUser
+        : (users[0]?.id ?? null)
+    );
 
-    if (item.mediaType === "tv") {
-      try {
-        const res = await fetch(`/api/seerr/tv/${item.id}`);
-        if (res.ok) {
+    const fetchTv = item.mediaType === "tv"
+      ? fetch(`/api/seerr/tv/${item.id}`).then(async (res) => {
+          if (!res.ok) return;
           const details: TvDetails = await res.json();
           setTvDetails(details);
-          // Pre-select all seasons (excluding specials)
-          setSelectedSeasons(
-            details.seasons.filter((s) => s.seasonNumber > 0).map((s) => s.seasonNumber)
-          );
-        }
-      } catch { /* ignore */ }
-    }
+          setSelectedSeasons(details.seasons.filter((s) => s.seasonNumber > 0).map((s) => s.seasonNumber));
+        }).catch(() => {})
+      : Promise.resolve();
+
+    const serviceEndpoint = item.mediaType === "tv"
+      ? "/api/seerr/service/sonarr/default"
+      : "/api/seerr/service/radarr/default";
+    const fetchService = fetch(serviceEndpoint).then(async (res) => {
+      if (!res.ok) return;
+      const svcData: ServiceInfo = await res.json();
+      setServiceInfo(svcData);
+      const hdProfile = svcData.profiles.find((p) => p.name === "HD - 720p/1080p");
+      setSelectedProfileId(hdProfile?.id ?? svcData.server.activeProfileId ?? svcData.profiles[0]?.id ?? null);
+      setSelectedRootFolder(svcData.server.activeDirectory ?? svcData.rootFolders[0]?.path ?? "");
+      setSelectedTagIds([]);
+    }).catch(() => {});
+
+    await Promise.all([fetchTv, fetchService]);
   };
 
   const submitRequest = async () => {
@@ -333,6 +373,15 @@ export default function Seerr() {
       };
       if (modalItem.mediaType === "tv" && selectedSeasons.length > 0) {
         body.seasons = selectedSeasons;
+      }
+      if (requestUserId !== null) {
+        body.userId = requestUserId;
+      }
+      if (serviceInfo) {
+        body.serverId = serviceInfo.server.id;
+        if (selectedProfileId !== null) body.profileId = selectedProfileId;
+        if (selectedRootFolder) body.rootFolder = selectedRootFolder;
+        if (selectedTagIds.length > 0) body.tags = selectedTagIds;
       }
       const res = await fetch("/api/seerr/request", {
         method: "POST",
@@ -635,6 +684,82 @@ export default function Seerr() {
                 <p className="seerr-modal-overview">{modalItem.overview}</p>
               )}
 
+              <div className="seerr-modal-field">
+                <label className="seerr-modal-field-label" htmlFor="seerr-request-user">Requested by</label>
+                <select
+                  id="seerr-request-user"
+                  className="seerr-modal-select"
+                  value={requestUserId ?? ""}
+                  onChange={(e) => setRequestUserId(e.target.value ? Number(e.target.value) : null)}
+                >
+                  {users.length === 0 && <option value="">No users available</option>}
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.displayName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Quality Profile */}
+              {serviceInfo && (
+                <div className="seerr-modal-field">
+                  <label className="seerr-modal-field-label" htmlFor="seerr-request-profile">Quality Profile</label>
+                  <select
+                    id="seerr-request-profile"
+                    className="seerr-modal-select"
+                    value={selectedProfileId ?? ""}
+                    onChange={(e) => setSelectedProfileId(Number(e.target.value))}
+                  >
+                    {serviceInfo.profiles.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Root Folder */}
+              {serviceInfo && serviceInfo.rootFolders.length > 0 && (
+                <div className="seerr-modal-field">
+                  <label className="seerr-modal-field-label" htmlFor="seerr-request-rootfolder">Root Folder</label>
+                  <select
+                    id="seerr-request-rootfolder"
+                    className="seerr-modal-select"
+                    value={selectedRootFolder}
+                    onChange={(e) => setSelectedRootFolder(e.target.value)}
+                  >
+                    {serviceInfo.rootFolders.map((f) => (
+                      <option key={f.id} value={f.path}>{f.path} ({formatBytes(f.freeSpace)})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Tags */}
+              {serviceInfo && serviceInfo.tags.length > 0 && (
+                <div className="seerr-modal-field">
+                  <label className="seerr-modal-field-label">Tags</label>
+                  <div className="seerr-tags-list">
+                    {serviceInfo.tags.map((tag) => (
+                      <label key={tag.id} className="seerr-tag-item">
+                        <input
+                          type="checkbox"
+                          checked={selectedTagIds.includes(tag.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedTagIds((prev) => [...prev, tag.id]);
+                            } else {
+                              setSelectedTagIds((prev) => prev.filter((id) => id !== tag.id));
+                            }
+                          }}
+                        />
+                        {tag.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Season selection for TV */}
               {modalItem.mediaType === "tv" && tvDetails && (
                 <div className="seerr-seasons-list">
@@ -669,7 +794,7 @@ export default function Seerr() {
                 <button
                   className="seerr-modal-request-btn"
                   onClick={submitRequest}
-                  disabled={requesting || (modalItem.mediaType === "tv" && selectedSeasons.length === 0)}
+                  disabled={requesting || users.length === 0 || (modalItem.mediaType === "tv" && selectedSeasons.length === 0)}
                 >
                   <Send size={15} />
                   {requesting ? "Requesting..." : "Submit Request"}
