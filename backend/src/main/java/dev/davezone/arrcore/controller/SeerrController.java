@@ -1,17 +1,21 @@
 package dev.davezone.arrcore.controller;
 
 import dev.davezone.arrcore.service.SeerrService;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.MultiValueMap;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/seerr")
 @AllArgsConstructor
+@Validated
 public class SeerrController {
 
     private final SeerrService seerrService;
@@ -45,6 +49,11 @@ public class SeerrController {
     @GetMapping("/movie/{id}")
     public Mono<Map<String, Object>> getMovieDetails(@PathVariable Long id) {
         return seerrService.getMovieDetails(id);
+    }
+
+    @GetMapping("/service/radarr/default")
+    public Mono<Map<String, Object>> getDefaultRadarrService() {
+        return seerrService.getDefaultRadarrService();
     }
 }
 

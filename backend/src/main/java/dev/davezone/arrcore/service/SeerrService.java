@@ -10,6 +10,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -20,6 +21,8 @@ public class SeerrService {
     private final SettingsService settingsService;
 
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
+            new ParameterizedTypeReference<>() {};
+    private static final ParameterizedTypeReference<List<Map<String, Object>>> LIST_OF_MAP_TYPE =
             new ParameterizedTypeReference<>() {};
 
     public SeerrService(WebClient webClient, SettingsService settingsService) {
@@ -121,5 +124,60 @@ public class SeerrService {
                         .onStatus(HttpStatusCode::isError, this::handleError)
                         .bodyToMono(MAP_TYPE)
         );
+    }
+
+    public Mono<List<Map<String, Object>>> getRadarrService() {
+        return getCredentials().flatMap(creds ->
+                webClient.get()
+                        .uri(creds[0] + "/api/v1/service/radarr")
+                        .header("X-Api-Key", creds[1])
+                        .accept(MediaType.APPLICATION_JSON)
+                        .retrieve()
+                        .onStatus(HttpStatusCode::isError, this::handleError)
+                        .bodyToMono(LIST_OF_MAP_TYPE)
+        );
+    }
+
+    public Mono<Map<String, Object>> getDefaultRadarrService() {
+        return getRadarrService()
+                .flatMap(this::extractRadarrServiceId)
+                .flatMap(this::getRadarrServiceById);
+    }
+
+    public Mono<Map<String, Object>> getRadarrServiceById(Long id) {
+        return getCredentials().flatMap(creds ->
+                webClient.get()
+                        .uri(creds[0] + "/api/v1/service/radarr/{id}", id)
+                        .header("X-Api-Key", creds[1])
+                        .accept(MediaType.APPLICATION_JSON)
+                        .retrieve()
+                        .onStatus(HttpStatusCode::isError, this::handleError)
+                        .bodyToMono(MAP_TYPE)
+        );
+    }
+
+    private Mono<Long> extractRadarrServiceId(List<Map<String, Object>> radarrServices) {
+        if (radarrServices == null || radarrServices.isEmpty()) {
+            return Mono.error(new IllegalStateException("No Radarr service configured in Seerr"));
+        }
+
+        Map<String, Object> selectedService = radarrServices.stream()
+                .filter(service -> Boolean.TRUE.equals(service.get("isDefault")))
+                .findFirst()
+                .orElse(radarrServices.get(0));
+
+        Object idValue = selectedService.get("id");
+        if (idValue instanceof Number number) {
+            return Mono.just(number.longValue());
+        }
+        if (idValue instanceof String stringValue && !stringValue.isBlank()) {
+            try {
+                return Mono.just(Long.parseLong(stringValue));
+            } catch (NumberFormatException ignored) {
+                return Mono.error(new IllegalStateException("Invalid Radarr service id from Seerr: " + stringValue));
+            }
+        }
+
+        return Mono.error(new IllegalStateException("Missing Radarr service id in Seerr response"));
     }
 }
