@@ -5,7 +5,6 @@ import dev.davezone.arrcore.config.ServiceSettings;
 import dev.davezone.arrcore.config.ServiceSettingsRepository;
 import dev.davezone.arrcore.dto.AllSettingsDTO;
 import dev.davezone.arrcore.dto.ServiceSettingsDTO;
-import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -180,39 +179,12 @@ public class SettingsService {
             return dto.getUsername() != null && !dto.getUsername().isBlank()
                     && dto.getPassword() != null && !dto.getPassword().isBlank();
         }
+        if ("grafana".equals(serviceName)) {
+            return !dto.getUrl().isBlank();
+        }
         return true;
     }
 
-    /**
-     * Seeds initial settings from .env file if DB is empty.
-     */
-    public Mono<Void> seedFromEnvIfEmpty() {
-        return repository.count().flatMap(count -> {
-            if (count > 0) return Mono.empty();
-            try {
-                Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-                return Flux.concat(
-                        seedService("sonarr", dotenv.get("SONARR_URL"), dotenv.get("SONARR_API_KEY"), null, null),
-                        seedService("radarr", dotenv.get("RADARR_URL"), dotenv.get("RADARR_API_KEY"), null, null),
-                        seedService("seerr", dotenv.get("SEERR_URL"), dotenv.get("SEERR_API_KEY"), null, null),
-                        seedService("portainer", dotenv.get("PORTAINER_URL"), dotenv.get("PORTAINER_API_KEY"), null, null),
-                        seedService("qbittorrent", dotenv.get("QBITTORRENT_URL"), null, dotenv.get("QBITTORRENT_USERNAME"), dotenv.get("QBITTORRENT_PASSWORD"))
-                ).then();
-            } catch (Exception e) {
-                return Mono.empty();
-            }
-        });
-    }
-
-    private Mono<ServiceSettings> seedService(String name, String url, String apiKey, String username, String password) {
-        if (url == null || url.isBlank()) return Mono.empty();
-        ServiceSettings entity = newEntity(name);
-        entity.setUrl(url);
-        entity.setApiKey(apiKey != null ? CryptoUtils.encrypt(apiKey, encryptionKey) : null);
-        entity.setUsername(username != null ? CryptoUtils.encrypt(username, encryptionKey) : null);
-        entity.setPassword(password != null ? CryptoUtils.encrypt(password, encryptionKey) : null);
-        return repository.save(entity);
-    }
 
     private ServiceSettings newEntity(String serviceName) {
         ServiceSettings entity = new ServiceSettings();
