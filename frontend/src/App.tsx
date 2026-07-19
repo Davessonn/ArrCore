@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/layout/Layout'
-import Index from './pages/Index'
+import Grafana from './pages/Grafana'
 import Portainer from './pages/Portainer'
 import Radarr from './pages/Radarr'
 import Sonarr from './pages/Sonarr'
@@ -13,7 +13,7 @@ function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Index />} />
+        <Route path="/" element={<Grafana />} />
         <Route path="/portainer" element={<Portainer />} />
         <Route path="/sonarr" element={<Sonarr />} />
         <Route path="/radarr" element={<Radarr />} />

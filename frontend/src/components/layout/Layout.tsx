@@ -4,20 +4,53 @@ import {
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
-  Container,
-  Tv,
-  Download,
-  Clapperboard,
   Settings,
+  type LucideIcon,
 } from "lucide-react";
 
-const navItems = [
-  { path: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { path: "/portainer", icon: Container, label: "Portainer" },
-  { path: "/sonarr", icon: Tv, label: "Sonarr" },
-  { path: "/radarr", icon: Clapperboard, label: "Radarr" },
-  { path: "/qbittorrent", icon: Download, label: "qBittorrent" },
-  { path: "/seerr", icon: Clapperboard, label: "Seerr" },
+type NavItem = {
+  path: string;
+  label: string;
+  icon?: LucideIcon;
+  logoSrc?: string;
+  logoAlt?: string;
+};
+
+const navItems: NavItem[] = [
+  { path: "/", 
+    logoSrc: "/logos/grafana.png",
+    logoAlt: "Grafana logo", 
+    label: "Dashboard" },
+  {
+    path: "/portainer",
+    label: "Portainer",
+    logoSrc: "/logos/portainer.png",
+    logoAlt: "Portainer logo",
+  },
+  {
+    path: "/sonarr",
+    label: "Sonarr",
+    logoSrc: "/logos/sonarr.png",
+    logoAlt: "Sonarr logo",
+  },
+  {
+    path: "/radarr",
+    label: "Radarr",
+    logoSrc: "/logos/radarr.png",
+    logoAlt: "Radarr logo",
+  },
+  {
+    path: "/qbittorrent",
+    label: "qBittorrent",
+    logoSrc: "/logos/qBittorrent_Logo.png",
+    logoAlt: "qBittorrent logo",
+  },
+  {
+    path: "/seerr",
+    label: "Seerr",
+    logoSrc: "/logos/seerr.png",
+    logoAlt: "Seerr logo",
+  },
   { path: "/settings", icon: Settings, label: "Settings" },
 ];
 
@@ -73,7 +106,11 @@ export default function Layout() {
                 `sidebar-link${isActive ? " active" : ""}`
               }
             >
-              <item.icon />
+              {item.logoSrc ? (
+                <img src={item.logoSrc} alt={item.logoAlt ?? `${item.label} logo`} />
+              ) : item.icon ? (
+                <item.icon />
+              ) : null}
               <span>{item.label}</span>
             </NavLink>
           ))}

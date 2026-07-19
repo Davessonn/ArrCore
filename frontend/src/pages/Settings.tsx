@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Save, TestTube, RefreshCw, Tv, Container, Download, Clapperboard, Shield, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
+import { Settings as SettingsIcon, Save, TestTube, RefreshCw, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
 import './Settings.css';
 
 interface ServiceConfig {
@@ -18,17 +18,19 @@ interface AllSettings {
 interface ServiceMeta {
   key: string;
   label: string;
-  icon: typeof Tv;
+  logoSrc: string;
+  logoAlt: string;
   color: string;
   fields: ('url' | 'apiKey' | 'username' | 'password')[];
 }
 
 const SERVICES: ServiceMeta[] = [
-  { key: 'sonarr', label: 'Sonarr', icon: Tv, color: '#818cf8', fields: ['url', 'apiKey'] },
-  { key: 'radarr', label: 'Radarr', icon: Clapperboard, color: '#f472b6', fields: ['url', 'apiKey'] },
-  { key: 'seerr', label: 'Jellyseerr', icon: Shield, color: '#a78bfa', fields: ['url', 'apiKey'] },
-  { key: 'portainer', label: 'Portainer', icon: Container, color: '#34d399', fields: ['url', 'apiKey'] },
-  { key: 'qbittorrent', label: 'qBittorrent', icon: Download, color: '#60a5fa', fields: ['url', 'username', 'password'] },
+  { key: 'grafana', label: 'Grafana', logoSrc: '/logos/grafana.png', logoAlt: 'Grafana logo', color: '#f97316', fields: ['url'] },
+  { key: 'sonarr', label: 'Sonarr', logoSrc: '/logos/sonarr.png', logoAlt: 'Sonarr logo', color: '#818cf8', fields: ['url', 'apiKey'] },
+  { key: 'radarr', label: 'Radarr', logoSrc: '/logos/radarr.png', logoAlt: 'Radarr logo', color: '#f472b6', fields: ['url', 'apiKey'] },
+  { key: 'seerr', label: 'Jellyseerr', logoSrc: '/logos/seerr.png', logoAlt: 'Seerr logo', color: '#a78bfa', fields: ['url', 'apiKey'] },
+  { key: 'portainer', label: 'Portainer', logoSrc: '/logos/portainer.png', logoAlt: 'Portainer logo', color: '#34d399', fields: ['url', 'apiKey'] },
+  { key: 'qbittorrent', label: 'qBittorrent', logoSrc: '/logos/qBittorrent_Logo.png', logoAlt: 'qBittorrent logo', color: '#60a5fa', fields: ['url', 'username', 'password'] },
 ];
 
 const FIELD_LABELS: Record<string, string> = {
@@ -184,7 +186,6 @@ export default function Settings() {
 
       <div className="settings-grid">
         {SERVICES.map(service => {
-          const Icon = service.icon;
           const testResult = testResults[service.key];
           const isVisible = showSecrets[service.key];
 
@@ -192,7 +193,7 @@ export default function Settings() {
             <div key={service.key} className="settings-card">
               <div className="settings-card-header">
                 <div className="settings-card-icon" style={{ background: `${service.color}20`, color: service.color }}>
-                  <Icon size={22} />
+                  <img src={service.logoSrc} alt={service.logoAlt} />
                 </div>
                 <div className="settings-card-title">
                   <h3>{service.label}</h3>

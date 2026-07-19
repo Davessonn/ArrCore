@@ -303,11 +303,27 @@ body {
   opacity: 0.7;
 }
 
+.sidebar-link img {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  object-fit: contain;
+  opacity: 0.7;
+}
+
 .sidebar-link:hover svg {
   opacity: 1;
 }
 
+.sidebar-link:hover img {
+  opacity: 1;
+}
+
 .sidebar-link.active svg {
+  opacity: 1;
+}
+
+.sidebar-link.active img {
   opacity: 1;
 }
 

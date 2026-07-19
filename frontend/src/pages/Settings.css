@@ -164,6 +164,12 @@
   flex-shrink: 0;
 }
 
+.settings-card-icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
 .settings-card-title {
   flex: 1;
   min-width: 0;
