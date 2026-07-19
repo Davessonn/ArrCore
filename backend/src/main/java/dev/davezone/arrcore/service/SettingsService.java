@@ -22,7 +22,7 @@ import java.util.Map;
 public class SettingsService {
 
     private static final String MASKED = "••••••••";
-    private static final List<String> SERVICE_NAMES = List.of("sonarr", "radarr", "seerr", "portainer", "qbittorrent");
+    private static final List<String> SERVICE_NAMES = List.of("sonarr", "radarr", "seerr", "portainer", "qbittorrent", "grafana");
     private static final List<String> API_KEY_SERVICES = List.of("sonarr", "radarr", "seerr", "portainer");
 
     private final ServiceSettingsRepository repository;
