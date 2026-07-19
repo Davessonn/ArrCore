@@ -3,7 +3,6 @@ import { NavLink, Outlet } from "react-router-dom";
 import {
   ChevronLeft,
   ChevronRight,
-  LayoutDashboard,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -78,7 +77,9 @@ export default function Layout() {
     <div className={`app-layout${sidebarOpen ? " sidebar-open" : " sidebar-closed"}`}>
       <aside className={`app-sidebar${sidebarOpen ? " is-open" : " is-closed"}`}>
         <div className="sidebar-header">
-          <div className="sidebar-logo">AC</div>
+          <div className="sidebar-logo">
+            <img src="/logos/ArrCoreLogo.png" alt="ArrCore logo" />
+          </div>
           <div className="sidebar-brand">
             <span className="sidebar-brand-name">ArrCore</span>
             <span className="sidebar-brand-sub">Media Manager</span>
