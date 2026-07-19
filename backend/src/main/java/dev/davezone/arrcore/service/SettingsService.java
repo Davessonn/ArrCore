@@ -115,7 +115,17 @@ public class SettingsService {
         if ("qbittorrent".equals(serviceName)) {
             return validateQbittorrent(baseUrl, dto.getUsername(), dto.getPassword());
         }
+        if ("grafana".equals(serviceName)) {
+            return validateGrafana(baseUrl);
+        }
         return Mono.just(false);
+    }
+
+    private Mono<Boolean> validateGrafana(String baseUrl) {
+        return webClient.get()
+                .uri(baseUrl)
+                .exchangeToMono(response -> Mono.just(response.statusCode().is2xxSuccessful()))
+                .onErrorReturn(false);
     }
 
     private Mono<Boolean> validateApiKeyService(String serviceName, String baseUrl, String apiKey) {
